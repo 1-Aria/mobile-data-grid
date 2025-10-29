@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'; // Re-added useState/useEffect
 import dynamic from 'next/dynamic';
 import { CollapsibleItem } from './CollapsibleItem';
+import { FixedSizeList as FixedSizeListType } from 'react-window';
 // ... rest of the file
 
 // Define DataEntry type/interface here or import it
@@ -16,8 +17,8 @@ interface OptimizedListProps {
   entries: DataEntry[];
 }
 
-const FixedSizeList = dynamic(
-  () => import('react-window').then(({ FixedSizeList }) => FixedSizeList), 
+const FixedSizeList = dynamic<FixedSizeListType>(
+  () => import('react-window').then(({ FixedSizeList }) => FixedSizeList),
   { ssr: false }
 );
 
