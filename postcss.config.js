@@ -1,7 +1,8 @@
 // postcss.config.js
 module.exports = {
   plugins: {
-    'tailwindcss': {}, 
+    // 🛑 USE THE PACKAGE SUGGESTED BY THE ERROR MESSAGE 🛑
+    '@tailwindcss/postcss': {}, 
     'autoprefixer': {},
   },
 }
