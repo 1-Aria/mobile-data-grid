@@ -4,9 +4,6 @@ import dynamic from 'next/dynamic';
 import { CollapsibleItem } from './CollapsibleItem';
 
 // ... rest of the file
-import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import { CollapsibleItem } from './CollapsibleItem';
 
 // Define DataEntry type/interface here or import it
 interface DataEntry { 
