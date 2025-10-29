@@ -124,25 +124,33 @@ export default function App() {
       setFetchError(null); 
       try {
         const response = await fetch(endpoint);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // ... (check for response.ok)
         
         const result = await response.json();
         
-        if (result && Array.isArray(result.data)) {
-          // Process and normalize the data structure
-          const processedData: Incident[] = result.data.map((item: any, index: number) => ({
-            id: item.id || `INC-API-${index}`, 
-            status: item.Status || item.status || 'N/A', 
-            priority: item.Priority || item.priority || 'N/A',
-            summary: item.Summary || item.summary || 'No summary',
-            submitter: item.Submitter || item.submitter || 'Unknown',
-            timestamp: item.Timestamp || item.timestamp || new Date().toISOString(),
-          }));
-          
-          setAllIncidents(processedData);
+        // 🛑 FINAL FIX: Determine the source array
+        let rawDataArray: any[] = [];
+        
+        if (Array.isArray(result)) {
+            // Case 1: Raw array returned (THIS IS YOUR DATA FORMAT)
+            rawDataArray = result;
+        } else if (result && Array.isArray(result.data)) {
+            // Case 2: Array wrapped in { data: [...] }
+            rawDataArray = result.data;
+        }
+        
+        // Normalize the data and set the state regardless of array length
+        const processedData: Incident[] = rawDataArray.map((item: any, index: number) => ({
+            // NOTE: Using the keys exactly as you provided them in the sample
+            id: item["ID Sự Cố"] || `INC-API-${index}`, 
+            status: item.Status || 'N/A', 
+            priority: item.Priority || item.priority || 'N/A', // Assuming a Priority field might exist
+            summary: item["Mô Tả Sự Cố"] || 'No summary',
+            submitter: item["Người Báo"] || 'Unknown',
+            timestamp: item["Ngày Báo Cáo"] || new Date().toISOString(),
+        }));
+        
+        setAllIncidents(processedData);
         } else {
           setFetchError("Fetched data structure is unexpected. Data might be missing the 'data' array.");
         }
