@@ -2,7 +2,7 @@ import { GetStaticProps, NextPage } from 'next';
 import React from 'react';
 
 // Import the components we will create in the next steps
-import { OptimizedList } from '../src/components/OptimizedList'; 
+import { OptimizedList } from '../components/OptimizedList';
 
 // --- 1. Define the TypeScript Interface ---
 // IMPORTANT: Adjust these fields and types to match the exact keys 
