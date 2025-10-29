@@ -1,9 +1,6 @@
-// ADD THIS LINE
-import { FixedSizeList as FixedSizeListType } from 'react-window'; 
-import { useEffect, useState } from 'react'; // <-- THIS LINE WAS MISSING
+import { useEffect, useState } from 'react'; // Re-added useState/useEffect
 import dynamic from 'next/dynamic';
 import { CollapsibleItem } from './CollapsibleItem';
-
 // ... rest of the file
 
 // Define DataEntry type/interface here or import it
@@ -19,9 +16,8 @@ interface OptimizedListProps {
   entries: DataEntry[];
 }
 
-// REPLACE the existing dynamic block with this:
 const FixedSizeList = dynamic(
-  () => import('react-window').then(({ FixedSizeList }) => FixedSizeList as typeof FixedSizeListType),
+  () => import('react-window').then(({ FixedSizeList }) => FixedSizeList), 
   { ssr: false }
 );
 
@@ -65,17 +61,17 @@ export const OptimizedList: React.FC<OptimizedListProps> = ({ entries }) => {
 
   return (
     <div className="w-full mx-auto max-w-xl">
-      <FixedSizeList
+     <FixedSizeList
   height={listHeight} 
   width={'100%'} 
   itemCount={entries.length} 
   itemSize={ESTIMATED_ITEM_SIZE} 
-  itemData={entries}
-  // Add this prop to satisfy type checking in some environments
+  itemData={entries} 
+  // Add the itemKey prop (this often resolves final type conflicts)
   itemKey={(index, data) => data[index].id} 
 >
-  {/* The Row component should be passed as the ONLY element inside the tags */}
-  {Row}
+  {/* Pass the Row component as the child */}
+  {Row} 
 </FixedSizeList>
     </div>
   );
