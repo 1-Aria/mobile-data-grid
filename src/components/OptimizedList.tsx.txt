@@ -1,5 +1,5 @@
 // ADD THIS LINE
-import { FixedSizeList as FixedSizeListType } from 'react-window';
+import { FixedSizeList as FixedSizeListType } from 'react-window/dist/index';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { CollapsibleItem } from './CollapsibleItem';
