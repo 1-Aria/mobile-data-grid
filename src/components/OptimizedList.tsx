@@ -1,3 +1,10 @@
+// ADD THIS LINE
+import { FixedSizeList as FixedSizeListType } from 'react-window';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { CollapsibleItem } from './CollapsibleItem';
+
+// ... rest of the file
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { CollapsibleItem } from './CollapsibleItem';
@@ -15,9 +22,9 @@ interface OptimizedListProps {
   entries: DataEntry[];
 }
 
-// CORRECTED (Uses destructuring to get the named export)
+// REPLACE the existing dynamic block with this:
 const FixedSizeList = dynamic(
-  () => import('react-window').then(({ FixedSizeList }) => FixedSizeList),
+  () => import('react-window').then(({ FixedSizeList }) => FixedSizeList as typeof FixedSizeListType),
   { ssr: false }
 );
 
