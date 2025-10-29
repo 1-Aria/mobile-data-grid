@@ -113,54 +113,61 @@ export default function App() {
 
 // --- DATA FETCHING (FROM GOOGLE APPS SCRIPT) ---
   useEffect(() => {
-    // The Apps Script endpoint you provided (THIS WAS MISSING)
+    // The Apps Script endpoint you provided
     const endpoint = 'https://script.google.com/macros/s/AKfycbxTUqUYhz9sNpp1SFTdwS4eK4z6_Rb_I49lU17vPdPiNJM1d9AHKvHYO4y8NgHntN97zA/exec';
 
     const fetchData = async () => {
-      // DEBUG: We added this line to confirm the function starts
       console.log("ATTEMPTING FETCH from Apps Script URL:", endpoint); 
       
       setLoading(true);
       setFetchError(null); 
       try {
         const response = await fetch(endpoint);
-        // ... (check for response.ok)
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const result = await response.json();
         
-        // 🛑 FINAL FIX: Determine the source array
+        // 🛑 FINAL DATA CHECK LOGIC 🛑
         let rawDataArray: any[] = [];
         
         if (Array.isArray(result)) {
-            // Case 1: Raw array returned (THIS IS YOUR DATA FORMAT)
+            // Case 1: Raw array returned (YOUR DATA FORMAT)
             rawDataArray = result;
         } else if (result && Array.isArray(result.data)) {
             // Case 2: Array wrapped in { data: [...] }
             rawDataArray = result.data;
-        }
+        } 
         
-        // Normalize the data and set the state regardless of array length
+        // If we still don't have an array, throw an error to trigger the catch block.
+        if (!Array.isArray(rawDataArray)) {
+             throw new Error("API response does not contain a valid array of incident data. Please check the endpoint.");
+        }
+
+        // Normalize the data using the correct Vietnamese keys
         const processedData: Incident[] = rawDataArray.map((item: any, index: number) => ({
-            // NOTE: Using the keys exactly as you provided them in the sample
             id: item["ID Sự Cố"] || `INC-API-${index}`, 
+            // Use Status directly if it exists, otherwise provide N/A
             status: item.Status || 'N/A', 
-            priority: item.Priority || item.priority || 'N/A', // Assuming a Priority field might exist
+            // Priority is a field we will guess, but it defaults to N/A if missing
+            priority: item.Priority || item.priority || 'N/A', 
             summary: item["Mô Tả Sự Cố"] || 'No summary',
             submitter: item["Người Báo"] || 'Unknown',
             timestamp: item["Ngày Báo Cáo"] || new Date().toISOString(),
         }));
         
-        setAllIncidents(processedData);
-        } else {
-          setFetchError("Fetched data structure is unexpected. Data might be missing the 'data' array.");
-        }
-      } catch (error) {
+        setAllIncidents(processedData); 
+
+      } catch (error) { // ⬅️ The 'catch' block is now correctly following the 'try'
         console.error("Data fetching failed:", error);
         
         let errorMessage = "Data fetching failed. Check Google Apps Script for cold start delay or network issues.";
         
         if (error instanceof Error) {
-            errorMessage = `Data fetching failed. Check Google Apps Script for cold start delay or errors. (${error.message})`;
+            // Use the specific error message, including our custom validation error
+            errorMessage = `${error.message}`;
         }
 
         setFetchError(errorMessage);
@@ -170,7 +177,7 @@ export default function App() {
     };
 
     fetchData();
-  }, []); 
+  }, []);
 // Empty dependency array
 
 
