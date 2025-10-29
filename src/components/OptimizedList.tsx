@@ -63,16 +63,11 @@ export const OptimizedList: React.FC<OptimizedListProps> = ({ entries }) => {
   return (
     <div className="w-full mx-auto max-w-xl">
      <FixedSizeList
-  height={listHeight} 
-  width={'100%'} 
-  itemCount={entries.length} 
-  itemSize={ESTIMATED_ITEM_SIZE} 
-  itemData={entries} 
-  // Add the itemKey prop (this often resolves final type conflicts)
-  itemKey={(index: number, data: DataEntry[]) => data[index].id} 
+    height={700} // e.g., 700 pixels
+    width={'100%'} // e.g., 100% of its container
+    // ... other props
 >
-  {/* Pass the Row component as the child */}
-  {Row} 
+    {Row}
 </FixedSizeList>
     </div>
   );
