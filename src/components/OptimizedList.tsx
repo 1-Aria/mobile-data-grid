@@ -69,7 +69,7 @@ export const OptimizedList: React.FC<OptimizedListProps> = ({ entries }) => {
   itemSize={ESTIMATED_ITEM_SIZE} 
   itemData={entries} 
   // Add the itemKey prop (this often resolves final type conflicts)
-  itemKey={(index, data) => data[index].id} 
+  itemKey={(index: number, data: DataEntry[]) => data[index].id} 
 >
   {/* Pass the Row component as the child */}
   {Row} 
