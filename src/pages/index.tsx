@@ -111,36 +111,60 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // --- DATA FETCHING (FROM GOOGLE APPS SCRIPT) ---
-  // Inside export default function App() { ... }
+// --- DATA FETCHING (FROM GOOGLE APPS SCRIPT) ---
   useEffect(() => {
-    // ... fetchData function setup ...
+    // The Apps Script endpoint you provided (THIS WAS MISSING)
+    const endpoint = 'https://script.google.com/macros/s/AKfycbxTUqUYhz9sNpp1SFTdwS4eK4z6_Rb_I49lU17vPdPiNJM1d9AHKvHYO4y8NgHntN97zA/exec';
 
     const fetchData = async () => {
+      // DEBUG: We added this line to confirm the function starts
+      console.log("ATTEMPTING FETCH from Apps Script URL:", endpoint); 
+      
       setLoading(true);
       setFetchError(null); 
       try {
-        // ... (API fetching code remains the same)
-        // ...
-      } catch (error) { // ⬅️ START OF CORRECTED BLOCK
+        const response = await fetch(endpoint);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result && Array.isArray(result.data)) {
+          // Process and normalize the data structure
+          const processedData: Incident[] = result.data.map((item: any, index: number) => ({
+            id: item.id || `INC-API-${index}`, 
+            status: item.Status || item.status || 'N/A', 
+            priority: item.Priority || item.priority || 'N/A',
+            summary: item.Summary || item.summary || 'No summary',
+            submitter: item.Submitter || item.submitter || 'Unknown',
+            timestamp: item.Timestamp || item.timestamp || new Date().toISOString(),
+          }));
+          
+          setAllIncidents(processedData);
+        } else {
+          setFetchError("Fetched data structure is unexpected. Data might be missing the 'data' array.");
+        }
+      } catch (error) {
         console.error("Data fetching failed:", error);
         
         let errorMessage = "Data fetching failed. Check Google Apps Script for cold start delay or network issues.";
         
-        // Safely check if the caught value is an Error instance to access the .message property
         if (error instanceof Error) {
             errorMessage = `Data fetching failed. Check Google Apps Script for cold start delay or errors. (${error.message})`;
         }
 
         setFetchError(errorMessage);
-      } finally { // ⬅️ END OF CORRECTED BLOCK
+      } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
-// ...
+  }, []); 
+// Empty dependency array
+
 
   // --- CLIENT-SIDE FILTERING LOGIC ---
   const filteredIncidents = useMemo(() => {
