@@ -43,12 +43,11 @@ const StatusPill = ({ status }: { status: string }) => {
 
 /**
  * Renders a single incident row using a responsive grid layout.
- * Now includes toggle functionality and conditional detail view.
+ * Now includes toggle functionality, compaction, and color coding.
  */
 const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
   
   const copyToClipboard = (text: string) => {
-    // Fallback for secure contexts where clipboard API might be restricted
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
     } else {
@@ -66,64 +65,68 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
     }
   };
 
-  const DetailField = ({ label, value }: { label: string, value: string }) => (
-      <div className="flex flex-col mb-3">
+  const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | JSX.Element, colorClass?: string }) => (
+      // Adjusted mb for better compaction in expanded view
+      <div className="flex flex-col mb-3"> 
           <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
-          <span className="text-sm font-semibold text-gray-700">{value}</span>
+          {/* Ensure value is displayed correctly, supporting both string and JSX */}
+          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
+            {value}
+          </span>
       </div>
   );
 
   return (
-    // Main container with click handler to toggle expansion
+    // Main container removed the border-l-4 for a cleaner card look
     <div 
         onClick={() => onToggle(item.id)}
         className={`
-            bg-white p-4 mb-3 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-150
-            border-l-4 cursor-pointer
-            ${item.status.toLowerCase() === 'closed' ? 'border-gray-400' : 'border-indigo-500'}
-            ${isExpanded ? 'pb-2' : 'pb-4'}
+            bg-white p-3 mb-3 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-150
+            cursor-pointer
         `}
     >
       
-      {/* 🛑 CONDENSED VIEW (Grid Layout) 🛑 */}
-      <div className="grid grid-cols-5 md:grid-cols-5 gap-x-4 gap-y-2 items-center">
+      {/* 🛑 CONDENSED VIEW (New 4-Column Grid Layout for Mobile) 🛑 */}
+      <div className="grid grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-2 items-start">
         
-        {/* 1. ID Sự Cố (1 Column) */}
-        <div className="flex flex-col col-span-2 md:col-span-1">
-            <span className="text-xs font-medium text-gray-500 hidden md:block">ID Sự Cố</span>
-            <div className="flex items-center space-x-2">
+        {/* 1. Status (Mobile Col-span 1, Desktop Col-span 1) */}
+        <div className="flex flex-col col-span-1 md:col-span-1 self-center">
+            <span className="text-xs font-medium text-gray-500 hidden md:block">Status</span>
+            <StatusPill status={item.status || 'N/A'} />
+        </div>
+
+        {/* 2. ID Sự Cố & Người Báo (Mobile Col-span 1, Desktop Col-span 2) - INDIGO Group */}
+        <div className="flex flex-col col-span-1 md:col-span-2">
+            <span className="text-xs font-medium text-gray-500 hidden md:block">ID / Người Báo</span>
+            <div className="flex items-center space-x-1 mb-0.5">
                 <span className="text-sm font-bold text-indigo-700">{item.id}</span>
                 <button 
-                    onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }} // Prevent row collapse when copying
+                    onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
                     className="text-gray-400 hover:text-indigo-500 transition-colors"
                     title="Copy ID"
                 >
-                    {/* Lucide Copy Icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    {/* Copy Icon */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                 </button>
             </div>
+            <span className="text-xs text-gray-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis block">{item.reporter || 'Ẩn danh'}</span>
         </div>
 
-        {/* 2. Status / Reporter (2 Columns on Mobile, 1 on Desktop) */}
-        <div className="flex flex-col col-span-2 md:col-span-2">
-            <span className="text-xs font-medium text-gray-500 hidden md:block">Status / Người Báo</span>
-            <div className='flex flex-col md:flex-row md:items-center gap-1 md:gap-3'>
-                <StatusPill status={item.status || 'N/A'} />
-                <span className="text-sm text-gray-600 font-medium">{item.reporter || 'Ẩn danh'}</span>
-            </div>
+        {/* 3. Ngày Báo Cáo & Chờ Đóng (Mobile Col-span 1, Desktop Col-span 1) - CYAN Group */}
+        <div className="flex flex-col col-span-1 md:col-span-1">
+            <span className="text-xs font-medium text-gray-500 hidden md:block">Time/Duration</span>
+            {/* Ngày Báo Cáo - Cyan */}
+            <span className="text-sm font-semibold text-cyan-700 mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis block">{item.reportDate}</span>
+            {/* Chờ Đóng - Cyan */}
+            <span className="text-xs text-cyan-700 font-medium whitespace-nowrap overflow-hidden text-ellipsis block">{item.closeDuration || 'N/A'}</span>
         </div>
 
-        {/* 3. Ngày Báo Cáo / Loại Máy (1 Column on Desktop) */}
-        <div className="flex flex-col col-span-1 md:col-span-1 hidden md:block">
-            <span className="text-xs font-medium text-gray-500">Ngày Báo Cáo / Loại Máy</span>
-            <div className='flex flex-col'>
-                <span className="text-xs text-gray-600">{item.reportDate}</span>
-                <span className="text-xs text-indigo-500 font-medium">{item.machineType || 'N/A'}</span>
-            </div>
-        </div>
-
-        {/* 4. Expansion Arrow (1 Column) */}
-        <div className="flex justify-end items-center md:col-span-1 col-span-1">
+        {/* 4. Chờ Xác Nhận & Expansion Arrow (Mobile Col-span 1, Desktop Col-span 1) - YELLOW Group */}
+        <div className="flex flex-col col-span-1 md:col-span-1 items-end">
+            <span className="text-xs font-medium text-gray-500 hidden md:block">Pending Action</span>
+            {/* Chờ Xác Nhận - Yellow */}
+            <span className="text-sm font-semibold text-yellow-600 mb-2 whitespace-nowrap overflow-hidden text-ellipsis block">{item.pendingApproval || 'N/A'}</span>
+            {/* Expansion Arrow */}
             <svg 
                 xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
                 className={`lucide lucide-chevron-down text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
@@ -142,23 +145,24 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
             {/* Grid for Detailed Info (3 columns on desktop, 2 on mobile) */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 
-                {/* 1. Technical Info */}
+                {/* 1. Technical Info (Orange Group) */}
                 <div>
-                    <DetailField label="ID Máy" value={item.machineId} />
-                    <DetailField label="Loại Máy" value={item.machineType} />
-                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} />
+                    <DetailField label="ID Máy" value={item.machineId} colorClass="text-orange-600" />
+                    <DetailField label="Loại Máy" value={item.machineType} colorClass="text-orange-600" />
+                    <DetailField label="Người Xác Nhận" value={item.approver} colorClass="text-gray-700" />
                 </div>
                 
-                {/* 2. Resolution Info */}
+                {/* 2. Duration/Date Info */}
                 <div>
-                    <DetailField label="Người Xác Nhận" value={item.approver} />
-                    <DetailField label="Chờ Xác Nhận" value={item.pendingApproval} />
-                    <DetailField label="Chờ Đóng (Duration)" value={item.closeDuration} />
+                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} colorClass="text-cyan-700" />
+                    <DetailField label="Chờ Xác Nhận" value={item.pendingApproval} colorClass="text-yellow-600" />
+                    <DetailField label="Chờ Đóng (Duration)" value={item.closeDuration} colorClass="text-cyan-700" />
                 </div>
 
-                {/* 3. Summary (Takes full column on Desktop) */}
+                {/* 3. Summary (Takes full column on Mobile, 1/3 on Desktop) */}
                 <div className="col-span-full md:col-span-1">
-                    <DetailField label="Mô Tả Sự Cố" value={item.summary} />
+                    {/* Summary uses default color for max readability */}
+                    <DetailField label="Mô Tả Sự Cố (Summary)" value={item.summary} /> 
                 </div>
             </div>
         </div>
@@ -179,7 +183,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // 🛑 NEW STATE FOR EXPANSION 🛑
+  // State for expansion
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Toggle function passed down to children
@@ -190,6 +194,8 @@ export default function App() {
 
   // --- DATA FETCHING (FROM GOOGLE APPS SCRIPT) ---
   useEffect(() => {
+    // The Apps Script endpoint is intentionally kept here as a URL, 
+    // as it is the defined method for fetching data in this application structure.
     const endpoint = 'https://script.google.com/macros/s/AKfycbx5eUTlDBXu95ZE9pYqo4rOlYNXRBbOifJM819CXGvUmhgS4GgvpwCqvVMa1LeEdAoGYQ/exec';
 
     const fetchData = async () => {
@@ -233,9 +239,9 @@ export default function App() {
             reportDate: item["Ngày Báo Cáo"] || new Date().toISOString(),
             closeDuration: item["Chờ Đóng"] || 'N/A',
             // Mapped new fields
-            machineId: item["ID Máy"] || 'N/A', // Mapped "ID Máy"
-            approver: item["Người Xác Nhận"] || 'Chưa xác nhận', // Mapped "Người Xác Nhận"
-            pendingApproval: item["Chờ Xác Nhận"] || 'N/A', // Mapped "Chờ Xác Nhận"
+            machineId: item["ID Máy"] || 'N/A', 
+            approver: item["Người Xác Nhận"] || 'Chưa xác nhận', 
+            pendingApproval: item["Chờ Xác Nhận"] || 'N/A', 
         }));
         
         setAllIncidents(processedData); 
@@ -277,12 +283,11 @@ export default function App() {
         String(item.summary).toLowerCase().includes(term) ||
         String(item.reporter).toLowerCase().includes(term) ||
         String(item.machineType).toLowerCase().includes(term) ||
-        String(item.machineId).toLowerCase().includes(term) // Search by Machine ID
+        String(item.machineId).toLowerCase().includes(term)
       );
     }
     
-    // Optional: Sort by Report Date (newest first)
-    list.sort((a, b) => new Date(b.reportDate).getTime() - new Date(a.reportDate).getTime());
+    // 🛑 CLIENT-SIDE SORTING REMOVED: Data displays in the order received from the source.
     
     return list;
   }, [allIncidents, statusFilter, searchTerm]);
@@ -356,17 +361,17 @@ export default function App() {
             </div>
         )}
 
-        {/* --- TABLE HEADER (Visible on Medium screens and up) --- */}
+        {/* --- TABLE HEADER (Visible on Medium screens and up, aligned to new columns) --- */}
         {!loading && !fetchError && (
             <div className="
-                hidden md:grid md:grid-cols-5 gap-4 
+                hidden md:grid md:grid-cols-5 gap-x-2 
                 font-bold text-xs uppercase text-gray-500 
-                mb-2 px-4 py-2 border-b-2 border-gray-200
+                mb-2 px-3 py-2 border-b-2 border-gray-200
             ">
-                <div className="md:col-span-1">ID SỰ CỐ</div>
-                <div className="md:col-span-2">STATUS / NGƯỜI BÁO</div>
-                <div className="md:col-span-1">NGÀY BÁO CÁO / LOẠI MÁY</div>
-                <div className="md:col-span-1 text-right">MỞ RỘNG</div>
+                <div className="md:col-span-1">Status</div>
+                <div className="md:col-span-2">ID / Người Báo</div>
+                <div className="md:col-span-1">Time/Duration</div>
+                <div className="md:col-span-1 text-right">Pending Action</div>
             </div>
         )}
 
