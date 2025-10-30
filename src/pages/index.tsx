@@ -190,7 +190,7 @@ export default function App() {
 
   // --- DATA FETCHING (FROM GOOGLE APPS SCRIPT) ---
   useEffect(() => {
-    const endpoint = 'https://script.google.com/macros/s/AKfycbxTUqUYhz9sNpp1SFTdwS4eK4z6_Rb_I49lU17vPdPiNJM1d9AHKvHYO4y8NgHntN97zA/exec';
+    const endpoint = 'https://script.google.com/macros/s/AKfycbx5eUTlDBXu95ZE9pYqo4rOlYNXRBbOifJM819CXGvUmhgS4GgvpwCqvVMa1LeEdAoGYQ/exec';
 
     const fetchData = async () => {
       console.log("ATTEMPTING FETCH from Apps Script URL:", endpoint); 
