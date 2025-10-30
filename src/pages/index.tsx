@@ -75,11 +75,11 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
   // DetailField component
   const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
       <div className="flex flex-col mb-3"> 
-          {/* Updated: Bigger (text-base), Bold (font-bold), Blue theme (text-indigo-700) */}
-          <span className="text-base font-bold text-indigo-700">{label}</span>
+          {/* Added: leading-tight to reduce vertical space */}
+          <span className="text-base font-bold text-indigo-700 leading-tight">{label}</span>
           
-          {/* Value remains text-sm, making the label visually larger */}
-          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
+          {/* Removed: mt-0.5 (margin-top) to pull the value closer to the label */}
+          <span className={`text-sm font-semibold ${colorClass}`}>
             {value}
           </span>
       </div>
