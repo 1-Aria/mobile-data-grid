@@ -122,11 +122,11 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         <div className="flex flex-col col-span-1">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Chờ XN/Đóng</span>
             {/* Chờ Xác Nhận */}
-            <span className="text-sm text-cyan-500 whitespace-nowrap overflow-hidden text-ellipsis block">
+            <span className="text-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis block">
                 {item.acceptPending || 'N/A'}
             </span>
             {/* Chờ Đóng */}
-            <span className="text-sm text-cyan-500 whitespace-nowrap overflow-hidden text-ellipsis block">
+            <span className="text-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis block">
                 {item.closePending || 'N/A'}
             </span>
         </div>
@@ -335,7 +335,7 @@ export default function App() {
         {loading && (
             <div className="text-center p-8 bg-white rounded-lg shadow-md mb-6">
                 <p className="text-lg font-medium text-indigo-700">
-                    Đang tải dữ liệu trực tiếp từ Google Sheets... (Có thể mất vài giây do khởi động hệ thống).
+                    Đang tải dữ liệu...
                 </p>
             </div>
         )}
