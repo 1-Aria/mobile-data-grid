@@ -8,7 +8,7 @@ interface Incident {
   reporter: string; // "Người Báo"
   machineType: string; // "Loại Máy"
   reportDate: string; // "Ngày Báo Cáo"
-  closeDuration: string; // "Chờ Đóng" (Kept for expanded view)
+  closePending: string; // "Chờ Đóng" (Kept for expanded view)
   
   // Existing mapped fields (using user's new names)
   machineId: string; // "ID Máy"
@@ -111,25 +111,25 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
                 </button>
             </div>
         </div>
-
-        {/* 2. ID Máy & Loại Máy (Col 2) - NEW FIELDS */}
-        <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 md:hidden block">ID/Loại Máy</span>
-            {/* ID Máy */}
-            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
-                {item.machineId || 'N/A'}
-            </span>
-            {/* Loại Máy */}
-            <span className="text-xs text-gray-700 font-medium block">
-                {item.machineType || 'N/A'}
-            </span>
-        </div>
         
-        {/* 3. Status & Ngày Báo Cáo (Col 3) */}
+        {/* 2. Status & Ngày Báo Cáo (Col 2) */}
         <div className="flex flex-col col-span-1">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
             <StatusPill status={item.status || 'N/A'} />
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
+        </div>
+
+        {/* 3. Chờ Xác Nhận & Chờ Đóng (Col 3) */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">Chờ XN/Đóng</span>
+            {/* Chờ Xác Nhận */}
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
+                {item.acceptPending || 'N/A'}
+            </span>
+            {/* Chờ Đóng */}
+            <span className="text-xs text-gray-900 font-medium block">
+                {item.closePending || 'N/A'}
+            </span>
         </div>
 
         {/* 4. Người Báo & Chevron (Col 4) */}
@@ -175,7 +175,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
                     <DetailField label="Ngày Xác Nhận (Accept Date)" value={item.acceptDate} />
                     <DetailField label="Ngày Đóng" value={item.closeDate} />
                     <DetailField label="Chờ Xác Nhận (Pending)" value={item.acceptPending} />
-                    <DetailField label="Chờ Đóng (Duration)" value={item.closeDuration} />
+                    <DetailField label="Chờ Đóng (Duration)" value={item.closePending} />
                 </div>
 
                 {/* Group 3: Summary / Steps / Prevention */}
@@ -258,7 +258,7 @@ export default function App() {
             reporter: item["Người Báo"] || 'Unknown',
             machineType: item["Loại Máy"] || 'Unknown Type',
             reportDate: item["Ngày Báo Cáo"] || new Date().toISOString(),
-            closeDuration: item["Chờ Đóng"] || 'N/A',
+            closePending: item["Chờ Đóng"] || 'N/A',
             
             // Existing mapped fields (using user's new properties)
             machineId: item["ID Máy"] || 'N/A', 
