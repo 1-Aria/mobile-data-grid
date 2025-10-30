@@ -65,7 +65,9 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
     }
   };
 
-  const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | JSX.Element, colorClass?: string }) => (
+  // The type definition below requires `import React`
+  // Replacing JSX.Element with React.ReactNode for broader compatibility and to resolve the namespace error.
+  const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
       // Adjusted mb for better compaction in expanded view
       <div className="flex flex-col mb-3"> 
           <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
