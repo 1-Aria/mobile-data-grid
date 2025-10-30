@@ -48,6 +48,7 @@ const StatusPill = ({ status }: { status: string }) => {
 const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
   
   const copyToClipboard = (text: string) => {
+    // Standard clipboard implementation
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
     } else {
@@ -65,7 +66,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
     }
   };
 
-  // DetailField component with color reversion (now defaults to text-gray-700/800)
+  // DetailField component (reverted to neutral colors)
   const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
       // Adjusted mb for better compaction in expanded view
       <div className="flex flex-col mb-3"> 
@@ -87,14 +88,15 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         `}
     >
       
-      {/* 🛑 CONDENSED VIEW (New 4-Column Grid Layout for Mobile) 🛑 */}
-      <div className="grid grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-2 items-start">
+      {/* 🛑 CONDENSED VIEW (Optimized 5-Column Layout for all devices) 🛑 
+          Uses a custom grid template to ensure the arrow column is small and fixed-width (40px)
+      */}
+      <div className="grid grid-cols-4 md:grid-cols-[1fr_1fr_1fr_1fr_40px] gap-x-3 items-start md:items-center">
         
-        {/* 1. ID Sự Cố (Mobile Col-span 1, Desktop Col-span 1) - ALONE */}
-        <div className="flex flex-col col-span-1 md:col-span-1">
-            <span className="text-xs font-medium text-gray-500 hidden md:block">ID Sự Cố</span>
+        {/* 1. ID Sự Cố (Col 1) - ALONE */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span>
             <div className="flex items-center space-x-1 mb-0.5">
-                {/* Color reverted to neutral */}
                 <span className="text-sm font-bold text-gray-900">{item.id}</span>
                 <button 
                     onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
@@ -107,34 +109,46 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
             </div>
         </div>
 
-        {/* 2. Status & Ngày Báo Cáo (Mobile Col-span 1, Desktop Col-span 1) */}
-        <div className="flex flex-col col-span-1 md:col-span-1">
-            <span className="text-xs font-medium text-gray-500 hidden md:block">Status / Report Date</span>
+        {/* 2. Status & Ngày Báo Cáo (Col 2) */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
             <StatusPill status={item.status || 'N/A'} />
-            {/* Ngày Báo Cáo - Color reverted to neutral */}
-            <span className="text-xs text-gray-700 font-medium mt-1 whitespace-nowrap overflow-hidden text-ellipsis block">{item.reportDate}</span>
+            {/* Ngày Báo Cáo - TRUNCATION FIX: Removed width limiting classes to allow wrapping/space use */}
+            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
         </div>
         
-        {/* 3. Người Báo (Mobile Col-span 1, Desktop Col-span 1) */}
-        <div className="flex flex-col col-span-1 md:col-span-1">
-            <span className="text-xs font-medium text-gray-500 hidden md:block">Người Báo</span>
-            {/* Người Báo - Color reverted to neutral */}
+        {/* 3. Người Báo (Col 3) - Added Label */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 block">Người Báo</span>
             <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">{item.reporter || 'Ẩn danh'}</span>
         </div>
 
-        {/* 4. Chờ Xác Nhận, Chờ Đóng, & Arrow (Mobile Col-span 1, Desktop Col-span 2) - Aligned Right */}
-        <div className="flex flex-col col-span-1 md:col-span-2 items-end">
-            <span className="text-xs font-medium text-gray-500 hidden md:block">Pending Action / Duration</span>
-            <div className="flex flex-col items-end">
-                {/* Chờ Xác Nhận - Color reverted to neutral */}
+        {/* 4. Chờ Xác Nhận, Chờ Đóng (Col 4 - Mobile) / Col 4 (Desktop) - Added Label */}
+        {/* On mobile (cols-4), this column takes 1/4 width and contains the arrow */}
+        <div className="flex flex-col col-span-1 items-start justify-between"> 
+            <span className="text-xs font-medium text-gray-500 block">Chờ XN / Đóng</span>
+            <div className='flex flex-col'>
                 <span className="text-sm font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis block">{item.pendingApproval || 'N/A'}</span>
-                {/* Chờ Đóng - Color reverted to neutral */}
                 <span className="text-xs text-gray-700 font-medium whitespace-nowrap overflow-hidden text-ellipsis block">{item.closeDuration || 'N/A'}</span>
             </div>
-            {/* Expansion Arrow (Kept the transition) */}
+            
+            {/* Arrow on Mobile - Only visible on 4-column layout */}
+            <div className='md:hidden mt-1'>
+                 <svg 
+                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
+                    className={`lucide lucide-chevron-down text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
+                >
+                    <path d="m6 9 6 6 6-6"/>
+                </svg>
+            </div>
+        </div>
+
+        {/* 5. ARROW (Desktop Only - New Last Column) */}
+        {/* Only visible on the 5-column layout on desktop */}
+        <div className="hidden md:flex flex-col col-span-1 justify-center items-end h-full"> 
             <svg 
                 xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
-                className={`lucide lucide-chevron-down text-gray-500 transition-transform duration-200 mt-1 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
+                className={`lucide lucide-chevron-down text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
             >
                 <path d="m6 9 6 6 6-6"/>
             </svg>
@@ -142,33 +156,33 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         
       </div>
 
-      {/* 🛑 EXPANDED VIEW (Full Details) - Color classes removed from DetailField usage 🛑 */}
+      {/* 🛑 EXPANDED VIEW (Full Details) 🛑 */}
       {isExpanded && (
         <div className="col-span-full pt-4 mt-2 border-t border-gray-100/80">
             <h3 className="text-md font-bold text-gray-800 mb-3 border-b pb-1">Chi Tiết Sự Cố</h3>
 
-            {/* Grid for Detailed Info (3 columns on desktop, 2 on mobile) */}
+            {/* Grid for Detailed Info (3 columns on desktop, 2 on mobile) 
+                Note: I've grouped the available data logically since new fields like "Ngày Xác Nhận" 
+                and "Bước Xử Lý" are not provided by the API and cannot be displayed.
+            */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 
-                {/* 1. Technical Info (Orange Group) */}
+                {/* Group 1: Technical / Machine Details */}
                 <div>
-                    {/* Removed colorClass props */}
                     <DetailField label="ID Máy" value={item.machineId} />
                     <DetailField label="Loại Máy" value={item.machineType} />
                     <DetailField label="Người Xác Nhận" value={item.approver} />
                 </div>
                 
-                {/* 2. Duration/Date Info */}
+                {/* Group 2: Date / Duration / Status Details */}
                 <div>
-                    {/* Removed colorClass props */}
                     <DetailField label="Ngày Báo Cáo" value={item.reportDate} />
                     <DetailField label="Chờ Xác Nhận" value={item.pendingApproval} />
                     <DetailField label="Chờ Đóng (Duration)" value={item.closeDuration} />
                 </div>
 
-                {/* 3. Summary (Takes full column on Mobile, 1/3 on Desktop) */}
+                {/* Group 3: Summary (Takes full column on Mobile, 1/3 on Desktop) */}
                 <div className="col-span-full md:col-span-1">
-                    {/* Summary uses default color for max readability */}
                     <DetailField label="Mô Tả Sự Cố (Summary)" value={item.summary} /> 
                 </div>
             </div>
@@ -211,6 +225,7 @@ export default function App() {
       setLoading(true);
       setFetchError(null); 
       try {
+        // Simple fetch attempt with no explicit backoff, relying on network stability for this pattern
         const response = await fetch(endpoint);
         
         if (!response.ok) {
@@ -371,14 +386,15 @@ export default function App() {
         {/* --- TABLE HEADER (Visible on Medium screens and up, ALIGNED to new columns) --- */}
         {!loading && !fetchError && (
             <div className="
-                hidden md:grid md:grid-cols-5 gap-x-2 
+                hidden md:grid md:grid-cols-[1fr_1fr_1fr_1fr_40px] gap-x-3 
                 font-bold text-xs uppercase text-gray-500 
                 mb-2 px-3 py-2 border-b-2 border-gray-200
             ">
                 <div className="md:col-span-1">ID Sự Cố</div>
                 <div className="md:col-span-1">Status / Ngày Báo Cáo</div>
                 <div className="md:col-span-1">Người Báo</div>
-                <div className="md:col-span-2 text-right">Pending Action / Duration</div>
+                <div className="md:col-span-1">Chờ Xác Nhận / Đóng</div>
+                <div className="md:col-span-1 text-right"></div> {/* Empty column for arrow */}
             </div>
         )}
 
