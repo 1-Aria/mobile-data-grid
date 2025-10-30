@@ -165,7 +165,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
                 
                 {/* Group 1: Technical / Machine Details */}
                 <div>
-                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} labelColor="text-red-500"/>
+                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} />
                     <DetailField label="ID Máy" value={item.machineId} />
                     <DetailField label="Loại Máy" value={item.machineType} />
                     <DetailField label="Mô Tả Sự Cố " value={item.summary} />
