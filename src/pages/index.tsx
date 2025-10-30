@@ -74,13 +74,16 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
 
   // DetailField component
   const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
-      <div className="flex flex-col mb-3"> 
-          <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
-          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
-            {value}
-          </span>
-      </div>
-  );
+      <div className="flex flex-col mb-3"> 
+          {/* Updated: Bigger (text-base), Bold (font-bold), Blue theme (text-indigo-700) */}
+          <span className="text-base font-bold text-indigo-700">{label}</span>
+          
+          {/* Value remains text-sm, making the label visually larger */}
+          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
+            {value}
+          </span>
+      </div>
+  );
 
   return (
     <div 
@@ -114,7 +117,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         
         {/* 2. Status & Ngày Báo Cáo (Col 2) */}
         <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
+            <span className="text-xs font-medium text-gray-500 md:hidden">Status / Ngày Báo Cáo</span>
             <StatusPill status={item.status || 'N/A'} />
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
         </div>
@@ -127,7 +130,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
                 {item.acceptPending || 'N/A'}
             </span>
             {/* Chờ Đóng */}
-            <span className="text-xs text-gray-900 font-medium block">
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
                 {item.closePending || 'N/A'}
             </span>
         </div>
@@ -162,25 +165,22 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
                 
                 {/* Group 1: Technical / Machine Details */}
                 <div>
+                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} labelColor="text-red-500"/>
                     <DetailField label="ID Máy" value={item.machineId} />
                     <DetailField label="Loại Máy" value={item.machineType} />
-                    <DetailField label="Người Báo" value={item.reporter} />
-                    <DetailField label="Người Xác Nhận (Handler)" value={item.handler} />
-                    <DetailField label="Người Đóng" value={item.closer} />
+                    <DetailField label="Mô Tả Sự Cố " value={item.summary} />
                 </div>
                 
                 {/* Group 2: Date / Duration / Status Details */}
                 <div>
-                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} />
-                    <DetailField label="Ngày Xác Nhận (Accept Date)" value={item.acceptDate} />
+                    <DetailField label="Ngày Xác Nhận" value={item.acceptDate} />
+                    <DetailField label="Người Xác Nhận" value={item.handler} />
                     <DetailField label="Ngày Đóng" value={item.closeDate} />
-                    <DetailField label="Chờ Xác Nhận (Pending)" value={item.acceptPending} />
-                    <DetailField label="Chờ Đóng (Duration)" value={item.closePending} />
+                    <DetailField label="Người Đóng" value={item.closer} />
                 </div>
 
                 {/* Group 3: Summary / Steps / Prevention */}
                 <div className="col-span-full md:col-span-1">
-                    <DetailField label="Mô Tả Sự Cố (Summary)" value={item.summary} />
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                 </div>
@@ -369,7 +369,7 @@ export default function App() {
                         placeholder="Tìm kiếm ID, Mô tả, Người báo..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="p-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500 flex-grow min-w-[200px]"
+                        className="p-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500 flex-grow min-w-[200px] text-gray-800 placeholder-gray-500"
                         disabled={loading}
                     />
                     
