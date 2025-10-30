@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
