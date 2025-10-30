@@ -8,12 +8,19 @@ interface Incident {
   reporter: string; // "Người Báo"
   machineType: string; // "Loại Máy"
   reportDate: string; // "Ngày Báo Cáo"
-  closeDuration: string; // "Chờ Đóng"
+  closeDuration: string; // "Chờ Đóng" (Kept for expanded view)
   
-  // NEW FIELDS
+  // Existing mapped fields (using user's new names)
   machineId: string; // "ID Máy"
-  approver: string; // "Người Xác Nhận"
-  pendingApproval: string; // "Chờ Xác Nhận"
+  handler: string; // "Người Xác Nhận"
+  acceptPending: string; // "Chờ Xác Nhận"
+
+  // 🛑 ALL FIELDS FROM YOUR DATA SOURCE ARE NOW INCLUDED 🛑
+  acceptDate: string; // "Ngày Xác Nhận"
+  closeDate: string; // "Ngày Đóng"
+  closer: string; // "Người Đóng"
+  processingStep: string; // "Bước Xử Lý"
+  preventionMethod: string; // "Cách Ngăn Ngừa"
 }
 
 // --- CORE COMPONENTS ---
@@ -43,7 +50,6 @@ const StatusPill = ({ status }: { status: string }) => {
 
 /**
  * Renders a single incident row using a responsive grid layout.
- * Now includes toggle functionality, compaction, and color coding.
  */
 const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
   
@@ -66,12 +72,10 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
     }
   };
 
-  // DetailField component (reverted to neutral colors)
+  // DetailField component
   const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
-      // Adjusted mb for better compaction in expanded view
       <div className="flex flex-col mb-3"> 
           <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
-          {/* Ensure value is displayed correctly, supporting both string and JSX */}
           <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
             {value}
           </span>
@@ -79,7 +83,6 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
   );
 
   return (
-    // Main container removed the border-l-4 for a cleaner card look
     <div 
         onClick={() => onToggle(item.id)}
         className={`
@@ -88,14 +91,14 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         `}
     >
       
-      {/* 🛑 CONDENSED VIEW (Optimized 5-Column Layout for all devices) 🛑 
-          Uses a custom grid template to ensure the arrow column is small and fixed-width (40px)
-      */}
-      <div className="grid grid-cols-4 md:grid-cols-[1fr_1fr_1fr_1fr_40px] gap-x-3 items-start md:items-center">
+      {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices - NEW FIELD STRUCTURE) 🛑 */}
+      {/* Removed md:grid-cols-[...] for strict 4-column layout on all screens */}
+      <div className="grid grid-cols-4 gap-x-3 items-start md:items-center">
         
-        {/* 1. ID Sự Cố (Col 1) - ALONE */}
+        {/* 1. ID Sự Cố (Col 1) - Primary ID */}
         <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span>
+            {/* Label kept for ID Sự Cố on mobile for clarity */}
+            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span> 
             <div className="flex items-center space-x-1 mb-0.5">
                 <span className="text-sm font-bold text-gray-900">{item.id}</span>
                 <button 
@@ -109,31 +112,36 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
             </div>
         </div>
 
-        {/* 2. Status & Ngày Báo Cáo (Col 2) */}
+        {/* 2. ID Máy & Loại Máy (Col 2) - NEW FIELDS */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">ID/Loại Máy</span>
+            {/* ID Máy */}
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
+                {item.machineId || 'N/A'}
+            </span>
+            {/* Loại Máy */}
+            <span className="text-xs text-gray-700 font-medium block">
+                {item.machineType || 'N/A'}
+            </span>
+        </div>
+        
+        {/* 3. Status & Ngày Báo Cáo (Col 3) */}
         <div className="flex flex-col col-span-1">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
             <StatusPill status={item.status || 'N/A'} />
-            {/* Ngày Báo Cáo - TRUNCATION FIX: Removed width limiting classes to allow wrapping/space use */}
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
         </div>
-        
-        {/* 3. Người Báo (Col 3) - Added Label */}
-        <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 block">Người Báo</span>
-            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">{item.reporter || 'Ẩn danh'}</span>
-        </div>
 
-        {/* 4. Chờ Xác Nhận, Chờ Đóng (Col 4 - Mobile) / Col 4 (Desktop) - Added Label */}
-        {/* On mobile (cols-4), this column takes 1/4 width and contains the arrow */}
-        <div className="flex flex-col col-span-1 items-start justify-between"> 
-            <span className="text-xs font-medium text-gray-500 block">Chờ XN / Đóng</span>
-            <div className='flex flex-col'>
-                <span className="text-sm font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis block">{item.pendingApproval || 'N/A'}</span>
-                <span className="text-xs text-gray-700 font-medium whitespace-nowrap overflow-hidden text-ellipsis block">{item.closeDuration || 'N/A'}</span>
-            </div>
+        {/* 4. Người Báo & Chevron (Col 4) */}
+        <div className="flex flex-col col-span-1 items-start md:items-end justify-between"> 
+            {/* Label for mobile */}
+            <span className="text-xs font-medium text-gray-500 block md:hidden">Người Báo</span> 
             
-            {/* Arrow on Mobile - Only visible on 4-column layout */}
-            <div className='md:hidden mt-1'>
+            {/* Reporter Name */}
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block md:text-right">{item.reporter || 'Ẩn danh'}</span>
+            
+            {/* Arrow - Always visible in the last column, aligned right on desktop */}
+            <div className='mt-1 md:mt-0 md:pr-4'>
                  <svg 
                     xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
                     className={`lucide lucide-chevron-down text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
@@ -142,48 +150,39 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
                 </svg>
             </div>
         </div>
-
-        {/* 5. ARROW (Desktop Only - New Last Column) */}
-        {/* Only visible on the 5-column layout on desktop */}
-        <div className="hidden md:flex flex-col col-span-1 justify-center items-end h-full"> 
-            <svg 
-                xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
-                className={`lucide lucide-chevron-down text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
-            >
-                <path d="m6 9 6 6 6-6"/>
-            </svg>
-        </div>
         
       </div>
 
-      {/* 🛑 EXPANDED VIEW (Full Details) 🛑 */}
+      {/* 🛑 EXPANDED VIEW (Full Details) - Updated with new properties 🛑 */}
       {isExpanded && (
         <div className="col-span-full pt-4 mt-2 border-t border-gray-100/80">
             <h3 className="text-md font-bold text-gray-800 mb-3 border-b pb-1">Chi Tiết Sự Cố</h3>
 
-            {/* Grid for Detailed Info (3 columns on desktop, 2 on mobile) 
-                Note: I've grouped the available data logically since new fields like "Ngày Xác Nhận" 
-                and "Bước Xử Lý" are not provided by the API and cannot be displayed.
-            */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 
                 {/* Group 1: Technical / Machine Details */}
                 <div>
                     <DetailField label="ID Máy" value={item.machineId} />
                     <DetailField label="Loại Máy" value={item.machineType} />
-                    <DetailField label="Người Xác Nhận" value={item.approver} />
+                    <DetailField label="Người Báo" value={item.reporter} />
+                    <DetailField label="Người Xác Nhận (Handler)" value={item.handler} />
+                    <DetailField label="Người Đóng" value={item.closer} />
                 </div>
                 
                 {/* Group 2: Date / Duration / Status Details */}
                 <div>
                     <DetailField label="Ngày Báo Cáo" value={item.reportDate} />
-                    <DetailField label="Chờ Xác Nhận" value={item.pendingApproval} />
+                    <DetailField label="Ngày Xác Nhận (Accept Date)" value={item.acceptDate} />
+                    <DetailField label="Ngày Đóng" value={item.closeDate} />
+                    <DetailField label="Chờ Xác Nhận (Pending)" value={item.acceptPending} />
                     <DetailField label="Chờ Đóng (Duration)" value={item.closeDuration} />
                 </div>
 
-                {/* Group 3: Summary (Takes full column on Mobile, 1/3 on Desktop) */}
+                {/* Group 3: Summary / Steps / Prevention */}
                 <div className="col-span-full md:col-span-1">
-                    <DetailField label="Mô Tả Sự Cố (Summary)" value={item.summary} /> 
+                    <DetailField label="Mô Tả Sự Cố (Summary)" value={item.summary} />
+                    <DetailField label="Bước Xử Lý" value={item.processingStep} />
+                    <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                 </div>
             </div>
         </div>
@@ -251,7 +250,7 @@ export default function App() {
             return item["ID Sự Cố"] && String(item["ID Sự Cố"]).trim() !== '';
         });
 
-        // 2. NORMALIZE: Map Vietnamese keys to internal English properties, INCLUDING NEW FIELDS
+        // 2. NORMALIZE: Map Vietnamese keys to internal English properties, INCLUDING ALL FIELDS
         const processedData: Incident[] = validData.map((item: any, index: number) => ({
             id: item["ID Sự Cố"] || `INC-API-${index}`, 
             status: item.Status || 'N/A', 
@@ -260,10 +259,18 @@ export default function App() {
             machineType: item["Loại Máy"] || 'Unknown Type',
             reportDate: item["Ngày Báo Cáo"] || new Date().toISOString(),
             closeDuration: item["Chờ Đóng"] || 'N/A',
-            // Mapped new fields
+            
+            // Existing mapped fields (using user's new properties)
             machineId: item["ID Máy"] || 'N/A', 
-            approver: item["Người Xác Nhận"] || 'Chưa xác nhận', 
-            pendingApproval: item["Chờ Xác Nhận"] || 'N/A', 
+            handler: item["Người Xác Nhận"] || 'Chưa xác nhận', // Updated from approver
+            acceptPending: item["Chờ Xác Nhận"] || 'N/A', // Updated from pendingApproval
+
+            // 🛑 MAPPED REVISED FIELDS 🛑
+            acceptDate: item["Ngày Xác Nhận"] || 'N/A', // Updated from confirmationDate
+            closeDate: item["Ngày Đóng"] || 'N/A',
+            closer: item["Người Đóng"] || 'N/A',
+            processingStep: item["Bước Xử Lý"] || 'N/A',
+            preventionMethod: item["Cách Ngăn Ngừa"] || 'N/A',
         }));
         
         setAllIncidents(processedData); 
@@ -383,18 +390,17 @@ export default function App() {
             </div>
         )}
 
-        {/* --- TABLE HEADER (Visible on Medium screens and up, ALIGNED to new columns) --- */}
+        {/* --- TABLE HEADER (Visible on Medium screens and up, ALIGNED to the new 4 columns) --- */}
         {!loading && !fetchError && (
             <div className="
-                hidden md:grid md:grid-cols-[1fr_1fr_1fr_1fr_40px] gap-x-3 
+                hidden md:grid md:grid-cols-4 gap-x-3 
                 font-bold text-xs uppercase text-gray-500 
                 mb-2 px-3 py-2 border-b-2 border-gray-200
             ">
-                <div className="md:col-span-1">ID Sự Cố</div>
-                <div className="md:col-span-1">Status / Ngày Báo Cáo</div>
-                <div className="md:col-span-1">Người Báo</div>
-                <div className="md:col-span-1">Chờ Xác Nhận / Đóng</div>
-                <div className="md:col-span-1 text-right"></div> {/* Empty column for arrow */}
+                <div className="col-span-1">ID Sự Cố</div>
+                <div className="col-span-1">ID Máy / Loại Máy</div>
+                <div className="col-span-1">Status / Ngày Báo Cáo</div>
+                <div className="col-span-1 text-right pr-4">Người Báo</div> 
             </div>
         )}
 
