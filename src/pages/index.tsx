@@ -75,11 +75,10 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
   // DetailField component
   const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
       <div className="flex flex-col mb-3"> 
-          {/* Added: leading-tight to reduce vertical space */}
-          <span className="text-base font-bold text-indigo-700 leading-tight">{label}</span>
+          {/* Minimal Change: Increased size to text-sm, changed font-medium to font-bold, and updated color to indigo-700 for theme. */}
+          <span className="text-sm font-bold uppercase text-indigo-700">{label}</span>
           
-          {/* Removed: mt-0.5 (margin-top) to pull the value closer to the label */}
-          <span className={`text-sm font-semibold ${colorClass}`}>
+          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
             {value}
           </span>
       </div>
@@ -103,12 +102,12 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
             {/* Label kept for ID Sự Cố on mobile for clarity */}
             <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span> 
             <div className="flex items-center space-x-1 mb-0.5">
-                <span className="text-sm font-bold text-gray-900">{item.id}</span>
+                <span className="text-sm font-bold text-indigo-800">{item.id}</span>
                 <button 
-                    onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
-                    className="text-gray-400 hover:text-indigo-500 transition-colors"
-                    title="Copy ID"
-                >
+                  onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
+                  className="p-1.5 text-lg text-gray-400 active:text-indigo-600 transition-colors"
+                  title="Copy ID"
+                    >
                     {/* Copy Icon */}
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                 </button>
@@ -117,7 +116,6 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         
         {/* 2. Status & Ngày Báo Cáo (Col 2) */}
         <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 md:hidden">Status / Ngày Báo Cáo</span>
             <StatusPill status={item.status || 'N/A'} />
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
         </div>
@@ -126,11 +124,11 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         <div className="flex flex-col col-span-1">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Chờ XN/Đóng</span>
             {/* Chờ Xác Nhận */}
-            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
+            <span className="text-sm text-gray-700 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
                 {item.acceptPending || 'N/A'}
             </span>
             {/* Chờ Đóng */}
-            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
+            <span className="text-sm text-gray-700 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
                 {item.closePending || 'N/A'}
             </span>
         </div>
@@ -332,7 +330,7 @@ export default function App() {
     <div className="dashboard-container min-h-screen bg-gray-50 p-4 font-sans antialiased">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-6 border-b pb-2">
-          Hệ Thống Theo Dõi Sự Cố Trực Tuyến 📊
+          Hệ Thống Báo Cáo Sự Cố
         </h1>
 
         {/* --- ERROR AND LOADING STATES --- */}
@@ -376,7 +374,7 @@ export default function App() {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="p-2 border border-gray-300 rounded-md text-sm bg-white"
+                        className="p-2 border border-gray-300 rounded-md text-sm bg-white text-gray-800"
                         disabled={loading}
                     >
                         <option value="all">Tất cả trạng thái</option>
