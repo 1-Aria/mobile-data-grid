@@ -74,15 +74,13 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
 
   // DetailField component
   const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
-      <div className="flex flex-col mb-3"> 
-          {/* Minimal Change: Increased size to text-sm, changed font-medium to font-bold, and updated color to indigo-700 for theme. */}
-          <span className="text-sm font-bold uppercase text-indigo-700">{label}</span>
-          
-          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
-            {value}
-          </span>
-      </div>
-  );
+      <div className="flex flex-col mb-3">
+          <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
+          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
+            {value}
+          </span>
+      </div>
+  );
 
   return (
     <div 
@@ -102,10 +100,10 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
             {/* Label kept for ID Sự Cố on mobile for clarity */}
             <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span> 
             <div className="flex items-center space-x-1 mb-0.5">
-                <span className="text-sm font-bold text-indigo-800">{item.id}</span>
+                <span className="text-sm font-bold text-indigo-700">{item.id}</span>
                 <button 
                   onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
-                  className="p-1.5 text-lg text-gray-400 active:text-indigo-600 transition-colors"
+                  className="p-1.5 text-2xl text-gray-400 active:text-indigo-600 transition-colors"
                   title="Copy ID"
                     >
                     {/* Copy Icon */}
@@ -124,11 +122,11 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         <div className="flex flex-col col-span-1">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Chờ XN/Đóng</span>
             {/* Chờ Xác Nhận */}
-            <span className="text-sm text-gray-700 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
+            <span className="text-sm text-gold-500 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
                 {item.acceptPending || 'N/A'}
             </span>
             {/* Chờ Đóng */}
-            <span className="text-sm text-gray-700 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
+            <span className="text-sm text-gold-500 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">
                 {item.closePending || 'N/A'}
             </span>
         </div>
