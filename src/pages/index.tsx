@@ -152,7 +152,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
 
   return (
     <div 
-        onClick={() => onToggle(item.id)}
+        onClick={(e) => {onToggle(item.id); (e.currentTarget as HTMLElement).blur();}}
         className={`
             bg-white p-3 mb-3 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-150
             cursor-pointer
