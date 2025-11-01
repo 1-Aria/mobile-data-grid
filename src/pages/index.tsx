@@ -2,7 +2,8 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 // ADD THESE FIRESTORE IMPORTS
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { db } from '../utils/firebase'; // Adjust path as needed
+import { db } from '../utils/firebase';
+import useTimeAgo from '../hooks/useTimeAgo';
 
 // Keep your existing Incident interface and components (StatusPill, DetailField, IncidentRow) unchanged
 // ... [Your existing interface and components remain the same] ...
@@ -15,7 +16,7 @@ interface Incident {
   reporter: string; // "Người Báo"
   machineType: string; // "Loại Máy"
   reportDate: string; // "Ngày Báo Cáo"
-  closePending: string; // "Chờ Đóng" (Kept for expanded view)
+  closePending: string; // "Chờ Đóng"
   machineId: string; // "ID Máy"
   handler: string; // "Người Xác Nhận"
   acceptPending: string; // "Chờ Xác Nhận"
@@ -46,6 +47,20 @@ const formatDate = (dateValue: any): string => {
   }
   return String(dateValue);
 };
+
+const PendingDurationDisplay: React.FC<{ status: string; dateString: string; }> = ({ status, dateString }) => {
+    
+    // Check if the status indicates a duration should be shown (e.g., "Pending")
+    // NOTE: Replace 'Pending' with the exact string your database uses!
+    const isPending = status.toLowerCase() === 'pending'; 
+    
+    // Only calculate the duration if it's pending.
+    const duration = isPending 
+        ? useTimeAgo(new Date(dateString)) // Convert string back to Date for the hook
+        : status; // If not pending, just display the static status text
+
+    return <>{duration}</>;
+}
 
 const StatusPill = ({ status }: { status: string }) => {
   const lowerStatus = status ? String(status).toLowerCase() : 'default';
@@ -194,8 +209,8 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
 
                 {/* Group 3: Summary / Steps / Prevention */}
                 <div className="col-span-full md:col-span-1">
-                    <DetailField label="Chờ Xác Nhận" value={item.acceptPending} />
-                    <DetailField label="Chờ Đóng (Duration)" value={item.closePending} />
+                    <DetailField label="Chờ Xác Nhận" value={<PendingDurationDisplay status={item.acceptPending} dateString={item.acceptDate} />} />
+                    <DetailField label="Chờ Đóng (Duration)" value={<PendingDurationDisplay status={item.closePending} dateString={item.closeDate} />} />
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                 </div>
