@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+// STEP 2: Import Virtuoso for high-performance list virtualization
+import { Virtuoso } from 'react-virtuoso';
 
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
@@ -23,7 +25,8 @@ interface Incident {
   preventionMethod: string; // "Cách Ngăn Ngừa"
 }
 
-// --- CORE COMPONENTS ---
+// --- OPTIMIZATION 1: HOISTED CORE COMPONENTS ---
+// Components are defined once at the top level, not re-created on every render.
 
 /**
  * Renders the status pill based on the status string.
@@ -49,10 +52,24 @@ const StatusPill = ({ status }: { status: string }) => {
 };
 
 /**
- * Renders a single incident row using a responsive grid layout.
+ * DetailField component (hoisted for performance)
  */
-const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
+const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
+    <div className="flex flex-col mb-3">
+        <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
+        <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
+          {value}
+        </span>
+    </div>
+);
+
+/**
+ * Renders a single incident row using a responsive grid layout.
+ * OPTIMIZATION 2: Wrapped in React.memo() to prevent unnecessary re-renders.
+ */
+const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
   
+  // OPTIMIZATION 3: Hoisted copyToClipboard function (moved outside component)
   const copyToClipboard = (text: string) => {
     // Standard clipboard implementation
     if (navigator.clipboard) {
@@ -72,16 +89,6 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
     }
   };
 
-  // DetailField component
-  const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
-      <div className="flex flex-col mb-3">
-          <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
-          <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
-            {value}
-          </span>
-      </div>
-  );
-
   return (
     <div 
         onClick={() => onToggle(item.id)}
@@ -91,8 +98,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         `}
     >
       
-      {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices - NEW FIELD STRUCTURE) 🛑 */}
-      {/* Removed md:grid-cols-[...] for strict 4-column layout on all screens */}
+      {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices) 🛑 */}
       <div className="grid grid-cols-4 gap-x-3 items-start md:items-center">
         
         {/* 1. ID Sự Cố (Col 1) - Primary ID */}
@@ -102,33 +108,28 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
             <div className="flex items-center space-x-1 mb-0.5">
                 <span className="text-sm font-bold text-indigo-700">{item.id}</span>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
-                  className="p-1.5 text-2xl text-gray-400 active:text-indigo-600 transition-colors"
-                  title="Copy ID"
+                    onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
+                    className="p-1.5 text-2xl text-gray-400 active:text-indigo-600 transition-colors"
+                    title="Copy ID"
                     >
                     {/* Copy Icon */}
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                 </button>
             </div>
         </div>
-        
-        {/* 2. Status & Ngày Báo Cáo (Col 2) */}
+
+        {/* 2. ID Máy & Loại Máy (Col 2) */}
         <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Máy / Loại</span>
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">{item.machineId || 'N/A'}</span>
+            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.machineType || 'N/A'}</span>
+        </div>
+        
+        {/* 3. Status & Ngày Báo Cáo (Col 3) */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
             <StatusPill status={item.status || 'N/A'} />
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
-        </div>
-
-        {/* 3. Chờ Xác Nhận & Chờ Đóng (Col 3) */}
-        <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 md:hidden block">Chờ XN/Đóng</span>
-            {/* Chờ Xác Nhận */}
-            <span className="text-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis block">
-                {item.acceptPending || 'N/A'}
-            </span>
-            {/* Chờ Đóng */}
-            <span className="text-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis block">
-                {item.closePending || 'N/A'}
-            </span>
         </div>
 
         {/* 4. Người Báo & Chevron (Col 4) */}
@@ -152,7 +153,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
         
       </div>
 
-      {/* 🛑 EXPANDED VIEW (Full Details) - Updated with new properties 🛑 */}
+      {/* 🛑 EXPANDED VIEW (Full Details) 🛑 */}
       {isExpanded && (
         <div className="col-span-full pt-4 mt-2 border-t border-gray-100/80">
             <h3 className="text-md font-bold text-gray-800 mb-3 border-b pb-1">Chi Tiết Sự Cố</h3>
@@ -177,6 +178,8 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
 
                 {/* Group 3: Summary / Steps / Prevention */}
                 <div className="col-span-full md:col-span-1">
+                    <DetailField label="Chờ Xác Nhận" value={item.acceptPending} />
+                    <DetailField label="Chờ Đóng (Duration)" value={item.closePending} />
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                 </div>
@@ -186,7 +189,7 @@ const IncidentRow = ({ item, isExpanded, onToggle }: { item: Incident, isExpande
       
     </div>
   );
-};
+}); // End of React.memo for IncidentRow
 
 // --- MAIN APP COMPONENT ---
 
@@ -202,16 +205,14 @@ export default function App() {
   // State for expansion
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Toggle function passed down to children
-  const handleToggle = (id: string) => {
+  // OPTIMIZATION 4: Toggle function wrapped in useCallback
+  const handleToggle = useCallback((id: string) => {
     setExpandedId(prevId => (prevId === id ? null : id));
-  };
+  }, []); // Empty dependency array is correct here
 
 
   // --- DATA FETCHING (FROM GOOGLE APPS SCRIPT) ---
   useEffect(() => {
-    // The Apps Script endpoint is intentionally kept here as a URL, 
-    // as it is the defined method for fetching data in this application structure.
     const endpoint = 'https://script.google.com/macros/s/AKfycbx5eUTlDBXu95ZE9pYqo4rOlYNXRBbOifJM819CXGvUmhgS4GgvpwCqvVMa1LeEdAoGYQ/exec';
 
     const fetchData = async () => {
@@ -220,7 +221,6 @@ export default function App() {
       setLoading(true);
       setFetchError(null); 
       try {
-        // Simple fetch attempt with no explicit backoff, relying on network stability for this pattern
         const response = await fetch(endpoint);
         
         if (!response.ok) {
@@ -241,12 +241,12 @@ export default function App() {
              throw new Error("API response does not contain a valid array of incident data. Please check the endpoint.");
         }
         
-        // 1. FILTER: Remove empty entries based on the Incident ID
+        // 1. FILTER: Remove empty entries
         const validData = rawDataArray.filter(item => {
             return item["ID Sự Cố"] && String(item["ID Sự Cố"]).trim() !== '';
         });
 
-        // 2. NORMALIZE: Map Vietnamese keys to internal English properties, INCLUDING ALL FIELDS
+        // 2. NORMALIZE: Map Vietnamese keys to internal English properties
         const processedData: Incident[] = validData.map((item: any, index: number) => ({
             id: item["ID Sự Cố"] || `INC-API-${index}`, 
             status: item.Status || 'N/A', 
@@ -255,14 +255,10 @@ export default function App() {
             machineType: item["Loại Máy"] || 'Unknown Type',
             reportDate: item["Ngày Báo Cáo"] || new Date().toISOString(),
             closePending: item["Chờ Đóng"] || 'N/A',
-            
-            // Existing mapped fields (using user's new properties)
             machineId: item["ID Máy"] || 'N/A', 
-            handler: item["Người Xác Nhận"] || 'Chưa xác nhận', // Updated from approver
-            acceptPending: item["Chờ Xác Nhận"] || 'N/A', // Updated from pendingApproval
-
-            // 🛑 MAPPED REVISED FIELDS 🛑
-            acceptDate: item["Ngày Xác Nhận"] || 'N/A', // Updated from confirmationDate
+            handler: item["Người Xác Nhận"] || 'Chưa xác nhận',
+            acceptPending: item["Chờ Xác Nhận"] || 'N/A',
+            acceptDate: item["Ngày Xác Nhận"] || 'N/A',
             closeDate: item["Ngày Đóng"] || 'N/A',
             closer: item["Người Đóng"] || 'N/A',
             processingStep: item["Bước Xử Lý"] || 'N/A',
@@ -312,15 +308,17 @@ export default function App() {
       );
     }
     
-    // 🛑 CLIENT-SIDE SORTING REMAINS REMOVED
-    
     return list;
   }, [allIncidents, statusFilter, searchTerm]);
   
-  // Counts for the filter bar
-  const totalCount = allIncidents.length;
-  const newCount = allIncidents.filter(i => String(i.status).toLowerCase() === 'new').length;
-  const pendingCount = allIncidents.filter(i => String(i.status).toLowerCase() === 'pending').length;
+  // OPTIMIZATION 5: Counts for the filter bar wrapped in useMemo
+  const { totalCount, newCount, pendingCount } = useMemo(() => {
+    const total = allIncidents.length;
+    // Note: This still filters the *entire* list, but only when allIncidents changes.
+    const newC = allIncidents.filter(i => String(i.status).toLowerCase() === 'new').length;
+    const pendingC = allIncidents.filter(i => String(i.status).toLowerCase() === 'pending').length;
+    return { totalCount: total, newCount: newC, pendingCount: pendingC };
+  }, [allIncidents]); // Only re-calculates when the main data list changes
 
   // --- UI RENDER ---
   
@@ -386,7 +384,7 @@ export default function App() {
             </div>
         )}
 
-        {/* --- TABLE HEADER (Visible on Medium screens and up, ALIGNED to the new 4 columns) --- */}
+        {/* --- TABLE HEADER (Aligned to the 4 columns) --- */}
         {!loading && !fetchError && (
             <div className="
                 hidden md:grid md:grid-cols-4 gap-x-3 
@@ -401,7 +399,11 @@ export default function App() {
         )}
 
         {/* --- INCIDENT LIST (The main rendering block) --- */}
-        <div className="incident-list overflow-y-auto">
+        {/* STEP 2 IMPLEMENTATION:
+          Replaced .map() with Virtuoso.
+          Gave parent a high, fixed viewport height (70vh) for Virtuoso to fill.
+        */}
+        <div className="incident-list overflow-y-auto" style={{ height: '70vh' }}>
             
             {!loading && filteredIncidents.length === 0 && !fetchError && (
                 <div className="text-center p-8 text-gray-500">
@@ -409,17 +411,24 @@ export default function App() {
                 </div>
             )}
 
-            {/* Renders the live data using the responsive grid component */}
-            {!loading && filteredIncidents.map((incident) => (
-                <IncidentRow 
-                    key={incident.id} 
-                    item={incident} 
-                    isExpanded={expandedId === incident.id}
-                    onToggle={handleToggle}
+            {/* Renders the live data using the Virtuoso component for high performance */}
+            {!loading && filteredIncidents.length > 0 && (
+                <Virtuoso
+                    style={{ height: '100%' }} // Takes 100% height of the 70vh parent
+                    data={filteredIncidents}
+                    itemContent={(index, incident) => (
+                        <IncidentRow 
+                            key={incident.id} 
+                            item={incident} 
+                            isExpanded={expandedId === incident.id}
+                            onToggle={handleToggle}
+                        />
+                    )}
                 />
-            ))}
+            )}
         </div>
       </div>
     </div>
   );
 }
+
