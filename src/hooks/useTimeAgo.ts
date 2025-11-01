@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
 /**
  * Calculates and returns the time elapsed since the given date, updating every minute.
@@ -17,7 +18,7 @@ const useTimeAgo = (date: Date): string => {
     useEffect(() => {
         // Set up the interval to recalculate the time every 60 seconds (1 minute).
         const intervalId = setInterval(() => {
-            setTimeAgo(formatDistanceToNowStrict(date, { addSuffix: true }));
+            setTimeAgo(formatDistanceToNowStrict(date, { addSuffix: true, locale: vi }));
         }, 60000); // 60 seconds
 
         // Cleanup function to clear the interval when the component unmounts or date changes.

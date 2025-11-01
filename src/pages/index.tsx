@@ -15,7 +15,6 @@ interface Incident {
   summary: string; // "Mô Tả Sự Cố"
   reporter: string; // "Người Báo"
   machineType: string; // "Loại Máy"
-  reportDate: string; // "Ngày Báo Cáo"
   reportDateMs: number | null; // "Ngày Báo UNIX"
   closePending: string; // "Chờ Đóng"
   machineId: string; // "ID Máy"
@@ -191,7 +190,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
         <div className="flex flex-col col-span-1">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
             <StatusPill status={item.status || 'N/A'} />
-            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
+            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDateMs ? new Date(item.reportDateMs).toLocaleString('vi-VN'): 'N/A'}</span>
         </div>
 
         {/* 4. Người Báo & Chevron (Col 4) */}
@@ -224,7 +223,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                 
                 {/* Group 1: Technical / Machine Details */}
                 <div>
-                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} />
+                    <DetailField label="Ngày Báo Cáo" value={item.reportDateMs ? new Date(item.reportDateMs).toLocaleString('vi-VN'): 'N/A'} />
                     <DetailField label="ID Máy" value={item.machineId} />
                     <DetailField label="Loại Máy" value={item.machineType} />
                     <DetailField label="Mô Tả Sự Cố " value={item.summary} />
@@ -306,13 +305,6 @@ export default function App() {
                 summary: data.summary || data['Mô Tả Sự Cố'] || 'No description',
                 reporter: data.reporter || data['Người Báo'] || 'Unknown',
                 machineType: data.machineType || data['Loại Máy'] || 'Unknown Type',
-                reportDate: (() => {
-                      const ms = toMilliseconds(data.reportDate || data['Ngày Báo Cáo']);
-                      if (ms) {
-                          return new Date(ms).toLocaleString('vi-VN');
-                      }
-                      return 'N/A';
-                  })(),
                 reportDateMs: toMilliseconds(data.reportDate || data['Ngày Báo Cáo']),
                 closePending: data.closePending || data['Chờ Đóng'] || 'N/A',
                 machineId: data.machineId || data['ID Máy'] || 'N/A',
