@@ -26,6 +26,26 @@ interface Incident {
   preventionMethod: string; // "Cách Ngăn Ngừa"
 }
 
+// Define a function to safely convert the date value to a string
+const formatDate = (dateValue: any): string => {
+  if (!dateValue) {
+    return 'N/A'; // Return a default if the value is null/undefined
+  }
+
+  // 1. Check if it's a Firestore Timestamp object (most likely cause of React error)
+  if (typeof dateValue === 'object' && dateValue.toDate) {
+    return dateValue.toDate().toLocaleDateString('en-US'); // Convert object to string
+  }
+
+  // 2. Check if it's a UNIX millisecond timestamp (number)
+  if (typeof dateValue === 'number') {
+    return new Date(dateValue).toLocaleDateString('en-US'); // Convert number to string
+  }
+
+  // 3. If it's already a string (like the default new Date().toISOString()), return it
+  return String(dateValue);
+};
+
 const StatusPill = ({ status }: { status: string }) => {
   const lowerStatus = status ? String(status).toLowerCase() : 'default';
   let color = 'bg-gray-200 text-gray-800'; // Default: N/A
@@ -239,13 +259,13 @@ export default function App() {
                 summary: data.summary || data['Mô Tả Sự Cố'] || 'No description',
                 reporter: data.reporter || data['Người Báo'] || 'Unknown',
                 machineType: data.machineType || data['Loại Máy'] || 'Unknown Type',
-                reportDate: data.reportDate || data['Ngày Báo Cáo'] || new Date().toISOString(),
+                reportDate: formatDate(data.reportDate || data['Ngày Báo Cáo'] || new Date().toISOString()),
                 closePending: data.closePending || data['Chờ Đóng'] || 'N/A',
                 machineId: data.machineId || data['ID Máy'] || 'N/A',
                 handler: data.handler || data['Người Xác Nhận'] || 'Chưa xác nhận',
                 acceptPending: data.acceptPending || data['Chờ Xác Nhận'] || 'N/A',
-                acceptDate: data.acceptDate || data['Ngày Xác Nhận'] || 'N/A',
-                closeDate: data.closeDate || data['Ngày Đóng'] || 'N/A',
+                acceptDate: formatDate(data.acceptDate || data['Ngày Xác Nhận'] || 'N/A'),
+                closeDate: formatDate(data.closeDate || data['Ngày Đóng'] || 'N/A'),
                 closer: data.closer || data['Người Đóng'] || 'N/A',
                 processingStep: data.processingStep || data['Bước Xử Lý'] || 'N/A',
                 preventionMethod: data.preventionMethod || data['Cách Ngăn Ngừa'] || 'N/A',
