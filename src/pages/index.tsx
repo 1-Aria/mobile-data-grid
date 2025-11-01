@@ -474,7 +474,7 @@ export default function App() {
             )}
 
             {!loading && filteredIncidents.length > 0 && (
-                <Virtuoso
+                <Virtuoso scrollSeekConfiguration={{enter: () => false, exit: () => false,}}
                     style={{ height: '100%' }}
                     data={filteredIncidents}
                     followOutput={'smooth'}
