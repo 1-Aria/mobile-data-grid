@@ -15,13 +15,14 @@ interface Incident {
   summary: string; // "Mô Tả Sự Cố"
   reporter: string; // "Người Báo"
   machineType: string; // "Loại Máy"
-  reportDate: number | null; // "Ngày Báo Cáo"
+  reportDate: string; // "Ngày Báo Cáo"
+  reportDateMs: number | null; // "Ngày Báo UNIX"
   closePending: string; // "Chờ Đóng"
   machineId: string; // "ID Máy"
   handler: string; // "Người Xác Nhận"
   acceptPending: string; // "Chờ Xác Nhận"
-  acceptDate: number | null; // "Ngày Xác Nhận"
-  closeDate: number | null; // "Ngày Đóng"
+  acceptDate: string; // "Ngày Xác Nhận"
+  closeDate: string; // "Ngày Đóng"
   closer: string; // "Người Đóng"
   processingStep: string; // "Bước Xử Lý"
   preventionMethod: string; // "Cách Ngăn Ngừa"
@@ -239,8 +240,8 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
 
                 {/* Group 3: Summary / Steps / Prevention */}
                 <div className="col-span-full md:col-span-1">
-                    <DetailField label="Chờ Xác Nhận" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.acceptDate} pendingField='acceptPending'staticValue={item.acceptPending} />} />
-                    <DetailField label="Chờ Đóng" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.acceptDate} pendingField='closePending'staticValue={item.closePending} />} />
+                    <DetailField label="Chờ Xác Nhận" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='acceptPending'staticValue={item.acceptPending} />} />
+                    <DetailField label="Chờ Đóng" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='closePending'staticValue={item.closePending} />} />
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                 </div>
@@ -305,13 +306,32 @@ export default function App() {
                 summary: data.summary || data['Mô Tả Sự Cố'] || 'No description',
                 reporter: data.reporter || data['Người Báo'] || 'Unknown',
                 machineType: data.machineType || data['Loại Máy'] || 'Unknown Type',
-                reportDate: toMilliseconds(data.reportDate || data['Ngày Báo Cáo']),
+                reportDate: (() => {
+                      const ms = toMilliseconds(data.reportDate || data['Ngày Báo Cáo']);
+                      if (ms) {
+                          return new Date(ms).toLocaleString('vi-VN');
+                      }
+                      return 'N/A';
+                  })(),
+                reportDateMs: toMilliseconds(data.reportDate || data['Ngày Báo Cáo']),
                 closePending: data.closePending || data['Chờ Đóng'] || 'N/A',
                 machineId: data.machineId || data['ID Máy'] || 'N/A',
                 handler: data.handler || data['Người Xác Nhận'] || 'Chưa xác nhận',
                 acceptPending: data.acceptPending || data['Chờ Xác Nhận'] || 'N/A',
-                acceptDate: toMilliseconds(data.acceptDate || data['Ngày Xác Nhận']),
-                closeDate: toMilliseconds(data.closeDate || data['Ngày Đóng']),
+                acceptDate: (() => {
+                      const ms = toMilliseconds(data.acceptDate || data['Ngày Báo Cáo']);
+                      if (ms) {
+                          return new Date(ms).toLocaleString('vi-VN');
+                      }
+                      return 'N/A';
+                  })(),
+                closeDate: (() => {
+                      const ms = toMilliseconds(data.closeDate || data['Ngày Báo Cáo']);
+                      if (ms) {
+                          return new Date(ms).toLocaleString('vi-VN');
+                      }
+                      return 'N/A';
+                  })(),
                 closer: data.closer || data['Người Đóng'] || 'N/A',
                 processingStep: data.processingStep || data['Bước Xử Lý'] || 'N/A',
                 preventionMethod: data.preventionMethod || data['Cách Ngăn Ngừa'] || 'N/A',
