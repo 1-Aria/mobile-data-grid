@@ -15,52 +15,82 @@ interface Incident {
   summary: string; // "Mô Tả Sự Cố"
   reporter: string; // "Người Báo"
   machineType: string; // "Loại Máy"
-  reportDate: string; // "Ngày Báo Cáo"
+  reportDate: number | null; // "Ngày Báo Cáo"
   closePending: string; // "Chờ Đóng"
   machineId: string; // "ID Máy"
   handler: string; // "Người Xác Nhận"
   acceptPending: string; // "Chờ Xác Nhận"
-  acceptDate: string; // "Ngày Xác Nhận"
-  closeDate: string; // "Ngày Đóng"
+  acceptDate: number | null; // "Ngày Xác Nhận"
+  closeDate: number | null; // "Ngày Đóng"
   closer: string; // "Người Đóng"
   processingStep: string; // "Bước Xử Lý"
   preventionMethod: string; // "Cách Ngăn Ngừa"
 }
 
-const formatDate = (dateValue: any): string => {
-  if (!dateValue) {
-    return 'N/A';
-  }
-
-  let dateObject: Date | null = null;
-  // 1. Check if it's a Firestore Timestamp object (Must be checked first due to the unique `.toDate()` method)
-  if (typeof dateValue === 'object' && dateValue.toDate) {
-    dateObject = dateValue.toDate();
-  } 
-  // 2. Combine: Handle numbers (milliseconds), strings, or existing Date objects
-  else if (typeof dateValue === 'number' || typeof dateValue === 'string' || dateValue instanceof Date) {
-    dateObject = new Date(dateValue);
-  }
-  // Final validation and formatting
-  if (dateObject instanceof Date && !isNaN(dateObject.getTime())) {
-    return dateObject.toLocaleString('en-SG'); 
-  }
-  return String(dateValue);
+const toMilliseconds = (dateValue: any): number | null => {
+    if (!dateValue) {
+        return null;
+    }
+    // 1. Check if it's a Firestore Timestamp object
+    if (typeof dateValue === 'object' && dateValue.toMillis) {
+        return dateValue.toMillis();
+    } 
+    // 2. Check if it's already a millisecond number
+    if (typeof dateValue === 'number') {
+        return dateValue;
+    }
+    // Fallback for unexpected types
+    return null;
 };
 
-const PendingDurationDisplay: React.FC<{ status: string; dateString: string; }> = ({ status, dateString }) => {
+/**
+ * Handles the display logic for dynamic duration fields (acceptPending and closePending).
+ *
+ * @param currentStatus - The current status of the incident (e.g., 'New', 'Pending').
+ * @param acceptMillisecondTime - The UNIX millisecond timestamp when the incident was accepted.
+ * @param pendingField - The specific field being rendered ('acceptPending' or 'closePending').
+ * @param staticValue - The static value stored in the database for the field (for the 'Pending' status).
+ */
+const DurationFieldDisplay: React.FC<{ 
+    currentStatus: string; 
+    acceptMillisecondTime: number | null; 
+    pendingField: 'acceptPending' | 'closePending';
+    staticValue: string | number; // The existing value from the database
+}> = ({ currentStatus, acceptMillisecondTime, pendingField, staticValue }) => {
     
-    // Check if the status indicates a duration should be shown (e.g., "Pending")
-    // NOTE: Replace 'Pending' with the exact string your database uses!
-    const isPending = status.toLowerCase() === 'pending'; 
+    // --- 1. Determine if we need to calculate a DYNAMIC Duration ---
     
-    // Only calculate the duration if it's pending.
-    const duration = isPending 
-        ? useTimeAgo(new Date(dateString)) // Convert string back to Date for the hook
-        : status; // If not pending, just display the static status text
-
-    return <>{duration}</>;
-}
+    let shouldBeDynamic = false;
+    
+    // Rule A: If status is "New", both fields are dynamic (duration from acceptDate to Now)
+    if (currentStatus.toLowerCase() === 'new') {
+        shouldBeDynamic = true;
+    } 
+    // Rule B: If status is "Pending", only closePending is dynamic
+    else if (currentStatus.toLowerCase() === 'pending') {
+        if (pendingField === 'closePending') {
+            shouldBeDynamic = true;
+        } else {
+            // For 'acceptPending' when status is 'Pending', we display the static value.
+            shouldBeDynamic = false; 
+        }
+    } 
+    // --- 2. Handle Display ---
+    // If the calculation should be dynamic, proceed to calculate duration
+    if (shouldBeDynamic) {
+        if (acceptMillisecondTime === null || isNaN(new Date(acceptMillisecondTime).getTime())) {
+            return <>N/A (No Date)</>;
+        }
+        // Convert the millisecond number into a Date object for the hook
+        const dateObject = new Date(acceptMillisecondTime);
+        // Use the dynamic hook
+        const duration = useTimeAgo(dateObject); 
+        return <>{duration}</>;
+    }
+    
+    // If we're not calculating dynamically, display the static value from the database (e.g., the final duration or 'N/A')
+    return <>{staticValue}</>;
+};
 
 const StatusPill = ({ status }: { status: string }) => {
   const lowerStatus = status ? String(status).toLowerCase() : 'default';
@@ -209,8 +239,8 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
 
                 {/* Group 3: Summary / Steps / Prevention */}
                 <div className="col-span-full md:col-span-1">
-                    <DetailField label="Chờ Xác Nhận" value={<PendingDurationDisplay status={item.acceptPending} dateString={item.acceptDate} />} />
-                    <DetailField label="Chờ Đóng (Duration)" value={<PendingDurationDisplay status={item.closePending} dateString={item.closeDate} />} />
+                    <DetailField label="Chờ Xác Nhận" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.acceptDate} pendingField='acceptPending'staticValue={item.acceptPending} />} />
+                    <DetailField label="Chờ Đóng" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.acceptDate} pendingField='closePending'staticValue={item.closePending} />} />
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                 </div>
@@ -275,13 +305,13 @@ export default function App() {
                 summary: data.summary || data['Mô Tả Sự Cố'] || 'No description',
                 reporter: data.reporter || data['Người Báo'] || 'Unknown',
                 machineType: data.machineType || data['Loại Máy'] || 'Unknown Type',
-                reportDate: formatDate(data.reportDate || data['Ngày Báo Cáo']) || new Date().toISOString(),
+                reportDate: toMilliseconds(data.reportDate || data['Ngày Báo Cáo']),
                 closePending: data.closePending || data['Chờ Đóng'] || 'N/A',
                 machineId: data.machineId || data['ID Máy'] || 'N/A',
                 handler: data.handler || data['Người Xác Nhận'] || 'Chưa xác nhận',
                 acceptPending: data.acceptPending || data['Chờ Xác Nhận'] || 'N/A',
-                acceptDate: formatDate(data.acceptDate || data['Ngày Xác Nhận']) || 'N/A',
-                closeDate: formatDate(data.closeDate || data['Ngày Đóng']) || 'N/A',
+                acceptDate: toMilliseconds(data.acceptDate || data['Ngày Xác Nhận']),
+                closeDate: toMilliseconds(data.closeDate || data['Ngày Đóng']),
                 closer: data.closer || data['Người Đóng'] || 'N/A',
                 processingStep: data.processingStep || data['Bước Xử Lý'] || 'N/A',
                 preventionMethod: data.preventionMethod || data['Cách Ngăn Ngừa'] || 'N/A',
