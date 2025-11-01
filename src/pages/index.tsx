@@ -26,6 +26,168 @@ interface Incident {
   preventionMethod: string; // "Cách Ngăn Ngừa"
 }
 
+const StatusPill = ({ status }: { status: string }) => {
+  const lowerStatus = status ? String(status).toLowerCase() : 'default';
+  let color = 'bg-gray-200 text-gray-800'; // Default: N/A
+
+  // Status mapping based on common incident states
+  if (lowerStatus === 'new') {
+    color = 'bg-red-500 text-white font-semibold';
+  } else if (lowerStatus === 'pending') {
+    color = 'bg-yellow-400 text-gray-900 font-semibold';
+  } else if (lowerStatus === 'closed') {
+    color = 'bg-green-500 text-white';
+  }
+
+  return (
+    <span className={`px-2 py-0.5 text-xs rounded-full ${color} transition duration-150 ease-in-out whitespace-nowrap`}>
+      {status}
+    </span>
+  );
+};
+
+/**
+ * DetailField component (hoisted for performance)
+ */
+const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
+    <div className="flex flex-col mb-3">
+        <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
+        <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
+          {value}
+        </span>
+    </div>
+);
+
+/**
+ * Renders a single incident row using a responsive grid layout.
+ * OPTIMIZATION 2: Wrapped in React.memo() to prevent unnecessary re-renders.
+ */
+const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
+  
+  // OPTIMIZATION 3: Hoisted copyToClipboard function (moved outside component)
+  const copyToClipboard = (text: string) => {
+    // Standard clipboard implementation
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
+  return (
+    <div 
+        onClick={() => onToggle(item.id)}
+        className={`
+            bg-white p-3 mb-3 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-150
+            cursor-pointer
+        `}
+    >
+      
+      {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices) 🛑 */}
+      <div className="grid grid-cols-4 gap-x-3 items-start md:items-center">
+        
+        {/* 1. ID Sự Cố (Col 1) - Primary ID */}
+        <div className="flex flex-col col-span-1">
+            {/* Label kept for ID Sự Cố on mobile for clarity */}
+            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span> 
+            <div className="flex items-center space-x-1 mb-0.5">
+                <span className="text-sm font-bold text-indigo-700">{item.id}</span>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
+                    className="p-1.5 text-2xl text-gray-400 active:text-indigo-600 transition-colors"
+                    title="Copy ID"
+                    >
+                    {/* Copy Icon */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                </button>
+            </div>
+        </div>
+
+        {/* 2. ID Máy & Loại Máy (Col 2) */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Máy / Loại</span>
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">{item.machineId || 'N/A'}</span>
+            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.machineType || 'N/A'}</span>
+        </div>
+        
+        {/* 3. Status & Ngày Báo Cáo (Col 3) */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
+            <StatusPill status={item.status || 'N/A'} />
+            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDate}</span>
+        </div>
+
+        {/* 4. Người Báo & Chevron (Col 4) */}
+        <div className="flex flex-col col-span-1 items-start md:items-end justify-between"> 
+            {/* Label for mobile */}
+            <span className="text-xs font-medium text-gray-500 block md:hidden">Người Báo</span> 
+            
+            {/* Reporter Name */}
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block md:text-right">{item.reporter || 'Ẩn danh'}</span>
+            
+            {/* Arrow - Always visible in the last column, aligned right on desktop */}
+            <div className='mt-1 md:mt-0 md:pr-4'>
+                 <svg 
+                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
+                    className={`lucide lucide-chevron-down text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
+                >
+                    <path d="m6 9 6 6 6-6"/>
+                </svg>
+            </div>
+        </div>
+        
+      </div>
+
+      {/* 🛑 EXPANDED VIEW (Full Details) 🛑 */}
+      {isExpanded && (
+        <div className="col-span-full pt-4 mt-2 border-t border-gray-100/80">
+            <h3 className="text-md font-bold text-gray-800 mb-3 border-b pb-1">Chi Tiết Sự Cố</h3>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                
+                {/* Group 1: Technical / Machine Details */}
+                <div>
+                    <DetailField label="Ngày Báo Cáo" value={item.reportDate} />
+                    <DetailField label="ID Máy" value={item.machineId} />
+                    <DetailField label="Loại Máy" value={item.machineType} />
+                    <DetailField label="Mô Tả Sự Cố " value={item.summary} />
+                </div>
+                
+                {/* Group 2: Date / Duration / Status Details */}
+                <div>
+                    <DetailField label="Ngày Xác Nhận" value={item.acceptDate} />
+                    <DetailField label="Người Xác Nhận" value={item.handler} />
+                    <DetailField label="Ngày Đóng" value={item.closeDate} />
+                    <DetailField label="Người Đóng" value={item.closer} />
+                </div>
+
+                {/* Group 3: Summary / Steps / Prevention */}
+                <div className="col-span-full md:col-span-1">
+                    <DetailField label="Chờ Xác Nhận" value={item.acceptPending} />
+                    <DetailField label="Chờ Đóng (Duration)" value={item.closePending} />
+                    <DetailField label="Bước Xử Lý" value={item.processingStep} />
+                    <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
+                </div>
+            </div>
+        </div>
+      )}
+      
+    </div>
+  );
+}); // End of React.memo for IncidentRow
+
+IncidentRow.displayName = 'IncidentRow'
+
 export default function App() {
   // Keep all your existing state variables
   const [allIncidents, setAllIncidents] = useState<Incident[]>([]); 
