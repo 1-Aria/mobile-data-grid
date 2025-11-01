@@ -477,6 +477,7 @@ export default function App() {
                 <Virtuoso
                     style={{ height: '100%' }}
                     data={filteredIncidents}
+                    followOutput={'smooth'}
                     itemContent={(index, incident) => (
                         <IncidentRow 
                             key={incident.id} 
