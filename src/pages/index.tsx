@@ -96,7 +96,7 @@ const StatusPill = ({ status }: { status: string }) => {
   // Status mapping based on common incident states
   if (lowerStatus === 'new') {
     color = 'bg-red-500 text-white font-semibold';
-  } else if (lowerStatus === 'In progress') {
+  } else if (lowerStatus === 'in progress') {
     color = 'bg-yellow-400 text-gray-900 font-semibold';
   } else if (lowerStatus === 'closed') {
     color = 'bg-green-500 text-white';
@@ -176,20 +176,20 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
             </div>
         </div>
 
-        {/* 2. ID Máy & Loại Máy (Col 2) */}
+        {/* 2. Status & Ngày Báo Cáo (Col 3) */}
         <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Máy / Loại</span>
-            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block">{item.machineId || 'N/A'}</span>
-            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.machineType || 'N/A'}</span>
-        </div>
-        
-        {/* 3. Status & Ngày Báo Cáo (Col 3) */}
-        <div className="flex flex-col col-span-1">
-            <span className="text-xs font-medium text-gray-500 md:hidden block">Status / Ngày Báo Cáo</span>
-            <StatusPill status={item.status || 'N/A'} />
+            <span className="text-xs font-medium text-gray-500 md:hidden block">Ngày Báo</span>
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDateMs ? new Date(item.reportDateMs).toLocaleString('vi-VN'): 'N/A'}</span>
+            <StatusPill status={item.status || 'N/A'} />
         </div>
 
+        {/* 3. Chờ Xác Nhận & Chờ Đóng (Col 2) */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">Chờ XN/ Đóng</span>
+            <span className="text-xs text-slate-700 font-medium mt-1 block"><DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='acceptPending'staticValue={item.acceptPending} /></span>
+            <span className="text-xs text-slate-700 font-medium mt-1 block"><DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='closePending'staticValue={item.closePending} /></span>
+        </div>
+        
         {/* 4. Người Báo & Chevron (Col 4) */}
         <div className="flex flex-col col-span-1 items-start md:items-end justify-between"> 
             {/* Label for mobile */}
@@ -236,8 +236,6 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
 
                 {/* Group 3: Summary / Steps / Prevention */}
                 <div className="col-span-full md:col-span-1">
-                    <DetailField label="Chờ Xác Nhận" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='acceptPending'staticValue={item.acceptPending} />} />
-                    <DetailField label="Chờ Đóng" value={<DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='closePending'staticValue={item.closePending} />} />
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                 </div>
@@ -280,7 +278,8 @@ export default function App() {
         // Replace 'incidents' with your actual collection name
         const incidentsQuery = query(
           collection(db, 'incidents'),
-          orderBy('reportDate', 'desc') // Optional: order by report date
+          orderBy('status', 'asc'),
+          orderBy('reportDate', 'desc') // Optional: order by
         );
 
         // Set up real-time listener
