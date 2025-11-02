@@ -3,7 +3,7 @@ import { Virtuoso } from 'react-virtuoso';
 // ADD THESE FIRESTORE IMPORTS
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import useTimeAgo from '../hooks/useTimeAgo';
+import { useTimeAgo } from '../hooks/useTimeAgo';
 
 // Keep your existing Incident interface and components (StatusPill, DetailField, IncidentRow) unchanged
 // ... [Your existing interface and components remain the same] ...

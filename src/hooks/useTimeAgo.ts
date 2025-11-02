@@ -1,31 +1,41 @@
-// src/hooks/useTimeAgo.ts (Requires 'date-fns' library for easy formatting)
+import { useEffect, useState } from 'react';
 
-import { useState, useEffect } from 'react';
-import { formatDistanceToNowStrict } from 'date-fns';
-import { es } from 'date-fns/locale';
+function formatTimeAgo(date: Date | number): string {
+  const d = typeof date === 'number' ? new Date(date) : date;
+  const now = new Date();
+  const diffInSeconds = Math.floor((d.getTime() - now.getTime()) / 1000);
+  const rtf = new Intl.RelativeTimeFormat('vi', { numeric: 'auto' });
 
-/**
- * Calculates and returns the time elapsed since the given date, updating every minute.
- * @param date - The date to calculate the duration from (must be a valid Date object).
- * @returns A string like "5 minutes ago" or "2 days ago".
- */
-const useTimeAgo = (date: Date): string => {
-    // State to hold the formatted string. Initialize with the current duration.
-    const [timeAgo, setTimeAgo] = useState(() => 
-        formatDistanceToNowStrict(date, { addSuffix: true })
-    );
+  const divisions: [Intl.RelativeTimeFormatUnit, number][] = [
+    ['year', 3600 * 24 * 365],
+    ['month', 3600 * 24 * 30],
+    ['day', 3600 * 24],
+    ['hour', 3600],
+    ['minute', 60],
+    ['second', 1],
+  ];
 
-    useEffect(() => {
-        // Set up the interval to recalculate the time every 60 seconds (1 minute).
-        const intervalId = setInterval(() => {
-            setTimeAgo(formatDistanceToNowStrict(date, { addSuffix: true, locale: es }));
-        }, 60000); // 60 seconds
+  for (const [unit, secondsInUnit] of divisions) {
+    if (Math.abs(diffInSeconds) >= secondsInUnit || unit === 'second') {
+      const value = Math.round(diffInSeconds / secondsInUnit);
+      return rtf.format(value, unit);
+    }
+  }
 
-        // Cleanup function to clear the interval when the component unmounts or date changes.
-        return () => clearInterval(intervalId);
-    }, [date]); 
+  return '';
+}
 
-    return timeAgo;
-};
+export function useTimeAgo(date: Date | number) {
+  const [timeAgo, setTimeAgo] = useState(() => formatTimeAgo(date));
 
-export default useTimeAgo;
+  useEffect(() => {
+    const update = () => setTimeAgo(formatTimeAgo(date));
+
+    update(); // update immediately on mount
+    const interval = setInterval(update, 60 * 1000); // refresh every minute
+
+    return () => clearInterval(interval);
+  }, [date]);
+
+  return timeAgo;
+}
