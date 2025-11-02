@@ -5,9 +5,6 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useTimeAgo } from '../hooks/useTimeAgo';
 
-// Keep your existing Incident interface and components (StatusPill, DetailField, IncidentRow) unchanged
-// ... [Your existing interface and components remain the same] ...
-
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
   id: string; // "ID Sự Cố"
@@ -67,7 +64,7 @@ const DurationFieldDisplay: React.FC<{
         shouldBeDynamic = true;
     } 
     // Rule B: If status is "Pending", only closePending is dynamic
-    else if (currentStatus.toLowerCase() === 'pending') {
+    else if (currentStatus.toLowerCase() === 'In progress') {
         if (pendingField === 'closePending') {
             shouldBeDynamic = true;
         } else {
@@ -99,7 +96,7 @@ const StatusPill = ({ status }: { status: string }) => {
   // Status mapping based on common incident states
   if (lowerStatus === 'new') {
     color = 'bg-red-500 text-white font-semibold';
-  } else if (lowerStatus === 'pending') {
+  } else if (lowerStatus === 'In progress') {
     color = 'bg-yellow-400 text-gray-900 font-semibold';
   } else if (lowerStatus === 'closed') {
     color = 'bg-green-500 text-white';
@@ -258,7 +255,7 @@ export default function App() {
   // Keep all your existing state variables
   const [allIncidents, setAllIncidents] = useState<Incident[]>([]); 
   const [searchTerm, setSearchTerm] = useState('');
-  const statusOptions = ['all', 'new', 'pending', 'closed']; 
+  const statusOptions = ['all', 'new', 'in progress', 'closed']; 
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -388,7 +385,7 @@ export default function App() {
   const { totalCount, newCount, pendingCount } = useMemo(() => {
     const total = allIncidents.length;
     const newC = allIncidents.filter(i => String(i.status).toLowerCase() === 'new').length;
-    const pendingC = allIncidents.filter(i => String(i.status).toLowerCase() === 'pending').length;
+    const pendingC = allIncidents.filter(i => String(i.status).toLowerCase() === 'in progress').length;
     return { totalCount: total, newCount: newC, pendingCount: pendingC };
   }, [allIncidents]);
 
@@ -398,13 +395,13 @@ export default function App() {
       {/* ... rest of your existing JSX remains exactly the same ... */}
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-6 border-b pb-2">
-          Hệ Thống Báo Cáo Sự Cố - Real-time
+          Hệ Thống Báo Cáo Sự Cố
         </h1>
 
         {loading && (
             <div className="text-center p-8 bg-white rounded-lg shadow-md mb-6">
                 <p className="text-lg font-medium text-indigo-700">
-                    Đang kết nối Firestore...
+                    Đang tải dữ liệu...
                 </p>
             </div>
         )}
@@ -423,7 +420,6 @@ export default function App() {
                     <span className="text-indigo-600 font-semibold">Tổng cộng: {totalCount}</span>
                     <span className="text-red-600">Mới: {newCount}</span>
                     <span className="text-yellow-600">Đang chờ: {pendingCount}</span>
-                    <span className="text-green-600 text-xs">🔥 Real-time</span>
                 </div>
 
                 <div className="flex space-x-3">
