@@ -114,8 +114,8 @@ const StatusPill = ({ status }: { status: string }) => {
  */
 const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
     <div className="flex flex-col mb-3">
-        <span className="text-xs font-medium uppercase text-gray-500">{label}</span>
-        <span className={`text-sm font-semibold mt-0.5 ${colorClass}`}>
+        <span className="text-xs **font-bold** uppercase text-slate-500">{label}</span>
+        <span className={`text-sm **font-medium** mt-0.5 ${colorClass}`}>
           {value}
         </span>
     </div>
@@ -214,7 +214,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
       {/* 🛑 EXPANDED VIEW (Full Details) 🛑 */}
       {isExpanded && (
         <div className="col-span-full pt-4 mt-2 border-t border-gray-100/80">
-            <h3 className="text-md font-bold text-gray-800 mb-3 border-b pb-1">Chi Tiết Sự Cố</h3>
+            <h3 className="text-md font-bold text-sky-800 mb-3 border-b pb-1">Chi Tiết Sự Cố</h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 
@@ -278,7 +278,7 @@ export default function App() {
         // Replace 'incidents' with your actual collection name
         const incidentsQuery = query(
           collection(db, 'incidents'),
-          orderBy('status', 'asc'),
+          orderBy('status', 'desc'),
           orderBy('reportDate', 'desc') // Optional: order by
         );
 
