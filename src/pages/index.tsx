@@ -4,6 +4,7 @@ import { Virtuoso } from 'react-virtuoso';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useTimeAgo } from '../hooks/useTimeAgo';
+import Image from 'next/image';
 
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
@@ -22,6 +23,7 @@ interface Incident {
   closer: string; // "Người Đóng"
   processingStep: string; // "Bước Xử Lý"
   preventionMethod: string; // "Cách Ngăn Ngừa"
+  images: string; // "Hình Ảnh Kèm Theo"
 }
 
 const toMilliseconds = (dateValue: any): number | null => {
@@ -238,6 +240,26 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                 <div className="col-span-full md:col-span-1">
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
+                    <DetailField 
+                      label="Hình Ảnh Sự Cố" 
+                      value={item.images ? (
+                          <div className="relative w-full h-48 mt-2"> 
+                              <Image 
+                                  src={item.images} 
+                                  alt={`Hình ảnh sự cố ${item.id}`} 
+                                  layout="fill" 
+                                  objectFit="contain" 
+                                  className="rounded-lg shadow-inner border border-gray-200"
+                                  onError={(e) => { 
+                                      e.currentTarget.onerror = null; 
+                                  }}
+                              />
+                          </div>
+                      ) : (
+                          'Không có hình ảnh đính kèm'
+                      )} 
+                      colorClass="text-gray-700" 
+                  />
                 </div>
             </div>
         </div>
@@ -323,6 +345,7 @@ export default function App() {
                 closer: data.closer || data['Người Đóng'] || 'N/A',
                 processingStep: data.processingStep || data['Bước Xử Lý'] || 'N/A',
                 preventionMethod: data.preventionMethod || data['Cách Ngăn Ngừa'] || 'N/A',
+                images: data.images || data['Hình Ảnh Kèm Theo'] || '',
               };
               
               processedData.push(incident);
