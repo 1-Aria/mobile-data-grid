@@ -5,9 +5,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   reactStrictMode: true,
   images: {
-    // Add the domain where your Firestore images are hosted
-    domains: ['firebasestorage.googleapis.com', 'storage.googleapis.com'],
-  },
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'drive.google.com',
+            },
+        ],
+    },
 };
 
 export default nextConfig;
