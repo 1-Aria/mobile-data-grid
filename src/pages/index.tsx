@@ -247,6 +247,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                               <Image 
                                   src={item.images} 
                                   alt={`Hình ảnh sự cố ${item.id}`} 
+                                  unoptimized={true} 
                                   layout="fill" 
                                   objectFit="contain" 
                                   className="rounded-lg shadow-inner border border-gray-200"
