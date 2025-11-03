@@ -241,22 +241,26 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
                     <DetailField 
-                        label="Hình Ảnh Sự Cố" 
-                        value={item.images ? (
-                            <img 
-                                src={item.images} 
-                                alt={`Hình ảnh sự cố ${item.id}`} 
-                                className="w-full h-auto max-h-60 object-contain rounded-lg shadow-inner mt-2 border border-gray-200"
-                                onError={(e) => { 
-                                    e.currentTarget.onerror = null; 
-                                }}
-                                loading="lazy" 
-                            />
-                        ) : (
-                            'Không có hình ảnh đính kèm'
-                        )} 
-                        colorClass="text-gray-700" 
-                    />
+                      label="Hình Ảnh Sự Cố" 
+                      value={item.images ? (
+                          <div className="relative w-full h-48 mt-2"> 
+                              <Image 
+                                  src={item.images} 
+                                  alt={`Hình ảnh sự cố ${item.id}`} 
+                                  unoptimized={true} 
+                                  layout="fill" 
+                                  objectFit="contain" 
+                                  className="rounded-lg shadow-inner border border-gray-200"
+                                  onError={(e) => { 
+                                      e.currentTarget.onerror = null; 
+                                  }}
+                              />
+                          </div>
+                      ) : (
+                          'Không có hình ảnh đính kèm'
+                      )} 
+                      colorClass="text-gray-700" 
+                  />
                 </div>
             </div>
         </div>
