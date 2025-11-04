@@ -240,27 +240,35 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                 <div className="col-span-full md:col-span-1">
                     <DetailField label="Bước Xử Lý" value={item.processingStep} />
                     <DetailField label="Cách Ngăn Ngừa" value={item.preventionMethod} />
-                    <DetailField 
-                      label="Hình Ảnh Sự Cố" 
-                      value={item.images ? (
-                          <div className="relative w-full h-48 mt-2"> 
-                              <Image 
-                                  src={item.images} 
-                                  alt={`Hình ảnh sự cố ${item.id}`} 
-                                  unoptimized={true} 
-                                  layout="fill" 
-                                  objectFit="contain" 
-                                  className="rounded-lg shadow-inner border border-gray-200"
-                                  onError={(e) => { 
-                                      e.currentTarget.onerror = null; 
-                                  }}
-                              />
-                          </div>
-                      ) : (
-                          'Không có hình ảnh đính kèm'
-                      )} 
-                      colorClass="text-gray-700" 
-                  />
+                    <DetailField
+                      label="Hình Ảnh Sự Cố"
+                      value={
+                          // 1. Kiểm tra: tồn tại, là mảng, và không rỗng
+                          item.images && Array.isArray(item.images) && item.images.length > 0 ? (
+                              <div className="flex flex-wrap gap-4 mt-2">
+                                  {/* 2. Khai báo kiểu dữ liệu cho tham số trong map() */}
+                                  {item.images.map((imageUrl: string, index: number) => (
+                                      <div key={index} className="relative w-48 h-32 md:w-60 md:h-40 flex-shrink-0">
+                                          <Image
+                                              src={imageUrl} // Bây giờ TypeScript biết chắc đây là một chuỗi
+                                              alt={`Hình ảnh sự cố ${item.id} - ${index + 1}`}
+                                              layout="fill"
+                                              objectFit="cover"
+                                              className="rounded-lg shadow-inner border border-gray-200"
+                                              onError={(e) => {
+                                                  e.currentTarget.onerror = null;
+                                                  e.currentTarget.src = '/path/to/placeholder-image.png';
+                                              }}
+                                          />
+                                      </div>
+                                  ))}
+                              </div>
+                          ) : (
+                              'Không có hình ảnh đính kèm'
+                          )
+                      }
+                      colorClass="text-gray-700"
+                    />
                 </div>
             </div>
         </div>
