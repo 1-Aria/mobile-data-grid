@@ -123,13 +123,7 @@ const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: st
     </div>
 );
 
-/**
- * Renders a single incident row using a responsive grid layout.
- * OPTIMIZATION 2: Wrapped in React.memo() to prevent unnecessary re-renders.
- */
-const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
-  
-  // OPTIMIZATION 3: Hoisted copyToClipboard function (moved outside component)
+// OPTIMIZATION 3: Hoisted copyToClipboard function (moved outside component)
   const copyToClipboard = (text: string) => {
     // Standard clipboard implementation
     if (navigator.clipboard) {
@@ -149,17 +143,20 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
     }
   };
 
+/**
+ * Renders a single incident row using a responsive grid layout.
+ * OPTIMIZATION 2: Wrapped in React.memo() to prevent unnecessary re-renders.
+ */
+const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
   return (
     <div 
-        onClick={(e) => {onToggle(item.id); (e.currentTarget as HTMLElement).blur();}}
-        className={`
-            bg-white p-3 mb-3 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-150
-            cursor-pointer
-        `}
-    >
+        className={`bg-white p-3 mb-3 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-150`}>
       
       {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices) 🛑 */}
-      <div className="grid grid-cols-4 gap-x-3 items-start md:items-center">
+      <div 
+          onClick={(e) => {onToggle(item.id); (e.currentTarget as HTMLElement).blur();}}
+          className={`cursor-pointer grid grid-cols-4 gap-x-3 items-start md:items-center`}
+      >
         
         {/* 1. ID Sự Cố (Col 1) - Primary ID */}
         <div className="flex flex-col col-span-1">
@@ -169,11 +166,11 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                 <span className="text-sm font-bold text-indigo-700">{item.id}</span>
                 <button 
                     onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
-                    className="p-1.5 text-2xl text-gray-400 active:text-indigo-600 transition-colors"
+                    className="p-3 text-2xl text-gray-400 active:text-indigo-600 transition-colors"
                     title="Copy ID"
                     >
                     {/* Copy Icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                 </button>
             </div>
         </div>
@@ -459,7 +456,7 @@ export default function App() {
                         placeholder="Tìm kiếm ID, Mô tả, Người báo..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="p-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500 flex-grow min-w-[200px] text-gray-800 placeholder-gray-500"
+                        className="p-2 border border-gray-300 rounded-md text-base focus:ring-indigo-500 focus:border-indigo-500 flex-grow min-w-[200px] text-gray-800 placeholder-gray-500"
                         disabled={loading}
                     />
                     
