@@ -117,8 +117,8 @@ const StatusPill = ({ status }: { status: string }) => {
  */
 const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
     <div className="flex flex-col mb-3">
-        <span className="text-xs **font-bold** uppercase text-blue-500">{label}</span>
-        <span className={`text-sm **font-medium** mt-0.5 ${colorClass}`}>
+        <span className="text-xs font-bold uppercase text-blue-500">{label}</span>
+        <span className={`text-sm font-medium mt-0.5 ${colorClass}`}>
           {value}
         </span>
     </div>
@@ -207,7 +207,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
       {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices) 🛑 */}
       <div 
           onClick={(e) => {onToggle(item.id); (e.currentTarget as HTMLElement).blur();}}
-          className={`cursor-pointer grid grid-cols-4 gap-x-3 items-start md:items-center`}
+          className="cursor-pointer grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-x-3 items-start md:items-center"
       >
         
         {/* 1. ID Sự Cố (Col 1) */}
@@ -270,7 +270,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
         {/* 4. Người Báo & Chevron (Col 4) */}
         <div className="flex flex-col col-span-1 items-start md:items-end justify-between"> 
             {/* Label for mobile */}
-            <span className="text-xs font-medium text-gray-500 block md:hidden">Người Báo</span> 
+            <span className="text-xs font-medium text-gray-500 block md:hidden">User</span> 
             
             {/* Reporter Name */}
             <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block md:text-right">{item.reporter || 'Ẩn danh'}</span>
@@ -563,14 +563,15 @@ export default function App() {
 
         {!loading && !fetchError && (
             <div className="
-                hidden md:grid md:grid-cols-4 gap-x-3 
+                hidden md:grid md:grid-cols-5 gap-x-3 
                 font-bold text-xs uppercase text-gray-500 
                 mb-2 px-3 py-2 border-b-2 border-gray-200
             ">
                 <div className="col-span-1">ID Sự Cố</div>
-                <div className="col-span-1">ID Máy / Loại Máy</div>
+                <div className="col-span-1">ID Máy</div>
                 <div className="col-span-1">Status / Ngày Báo Cáo</div>
-                <div className="col-span-1 text-right pr-4">Người Báo</div> 
+                <div className="col-span-1">Chờ XN / Chờ Đóng</div>
+                <div className="col-span-1 text-right pr-4">User</div> 
             </div>
         )}
 
