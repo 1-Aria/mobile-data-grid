@@ -5,6 +5,7 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useTimeAgo } from '../hooks/useTimeAgo';
 import Image from 'next/image';
+import Portal from '../components/Portal';
 
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
@@ -116,7 +117,7 @@ const StatusPill = ({ status }: { status: string }) => {
  */
 const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
     <div className="flex flex-col mb-3">
-        <span className="text-xs **font-bold** uppercase text-sky-500">{label}</span>
+        <span className="text-xs **font-bold** uppercase text-blue-500">{label}</span>
         <span className={`text-sm **font-medium** mt-0.5 ${colorClass}`}>
           {value}
         </span>
@@ -146,7 +147,8 @@ const ImageModal = ({ src, onClose, isOpen }: { src: string, onClose: () => void
     if (!isOpen) return null;
 
     return (
-        // Overlay
+      <Portal>
+        {/* Overlay */}
         <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4" 
             onClick={onClose} 
@@ -177,6 +179,7 @@ const ImageModal = ({ src, onClose, isOpen }: { src: string, onClose: () => void
                 </div>
             </div>
         </div>
+      </Portal>
     );
 };
 
@@ -241,6 +244,13 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                 </svg>
             </div>
+        </div>
+
+        {/* 1.5. Chờ Xác Nhận & Chờ Đóng (Col 1.5) */}
+        <div className="flex flex-col col-span-1">
+            <span className="text-xs font-medium text-gray-500 md:hidden block">ID Máy</span>
+            <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block md:text-right">{item.machineId || 'N/A'}</span>
+            <span className="text-xs text-gray-700 font-medium mt-1 block">{item.machineType || 'N/A'}</span>
         </div>
 
         {/* 2. Status & Ngày Báo Cáo (Col 3) */}
