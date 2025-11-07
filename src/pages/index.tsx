@@ -207,11 +207,11 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
       {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices) 🛑 */}
       <div 
           onClick={(e) => {onToggle(item.id); (e.currentTarget as HTMLElement).blur();}}
-          className="cursor-pointer grid grid-cols-5 gap-x-3 items-start md:items-center"
+          className="grid grid-cols-[auto_auto_auto_auto_auto] gap-x-3"
       >
         
         {/* 1. ID Sự Cố (Col 1) */}
-        <div className="flex flex-col col-span-1">
+        <div className="flex flex-col">
             <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span> 
 
             <div 
@@ -247,28 +247,28 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
         </div>
 
         {/* 1.5. Chờ Xác Nhận & Chờ Đóng (Col 1.5) */}
-        <div className="flex flex-col col-span-1">
+        <div className="flex flex-col">
             <span className="text-xs font-medium text-gray-500 md:hidden block">ID Máy</span>
             <span className="text-sm text-gray-900 font-semibold whitespace-nowrap overflow-hidden text-ellipsis block md:text-right">{item.machineId || 'N/A'}</span>
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.machineType || 'N/A'}</span>
         </div>
 
         {/* 2. Status & Ngày Báo Cáo (Col 3) */}
-        <div className="flex flex-col col-span-1">
+        <div className="flex flex-col">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Ngày Báo</span>
             <span className="text-xs text-gray-700 font-medium mt-1 block">{item.reportDateMs ? new Date(item.reportDateMs).toLocaleString('vi-VN'): 'N/A'}</span>
             <StatusPill status={item.status || 'N/A'} />
         </div>
 
         {/* 3. Chờ Xác Nhận & Chờ Đóng (Col 2) */}
-        <div className="flex flex-col col-span-1">
+        <div className="flex flex-col">
             <span className="text-xs font-medium text-gray-500 md:hidden block">Chờ XN/ Đóng</span>
             <span className="text-xs text-slate-700 font-medium mt-1 block"><DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='acceptPending'staticValue={item.acceptPending} /></span>
             <span className="text-xs text-slate-700 font-medium mt-1 block"><DurationFieldDisplay currentStatus={item.status} acceptMillisecondTime={item.reportDateMs} pendingField='closePending'staticValue={item.closePending} /></span>
         </div>
         
         {/* 4. Người Báo & Chevron (Col 4) */}
-        <div className="flex flex-col col-span-1 items-start md:items-end justify-between"> 
+        <div className="flex flex-col items-start md:items-end justify-between"> 
             {/* Label for mobile */}
             <span className="text-xs font-medium text-gray-500 block md:hidden">User</span> 
             
