@@ -116,38 +116,87 @@ const StatusPill = ({ status }: { status: string }) => {
  */
 const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
     <div className="flex flex-col mb-3">
-        <span className="text-xs **font-bold** uppercase text-slate-500">{label}</span>
+        <span className="text-xs **font-bold** uppercase text-sky-500">{label}</span>
         <span className={`text-sm **font-medium** mt-0.5 ${colorClass}`}>
           {value}
         </span>
     </div>
 );
 
-// OPTIMIZATION 3: Hoisted copyToClipboard function (moved outside component)
-  const copyToClipboard = (text: string) => {
-    // Standard clipboard implementation
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        console.error('Fallback: Oops, unable to copy', err);
-      }
-      document.body.removeChild(textArea);
+const copyToClipboard = (text: string) => {
+  // Standard clipboard implementation
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text);
+  } else {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
     }
-  };
+    document.body.removeChild(textArea);
+  }
+};
+
+const ImageModal = ({ src, onClose, isOpen }: { src: string, onClose: () => void, isOpen: boolean }) => {
+    if (!isOpen) return null;
+
+    return (
+        // Overlay
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4" 
+            onClick={onClose} 
+        >
+            {/* Modal Content */}
+            <div 
+                className="relative max-w-full max-h-full w-auto h-auto"
+                onClick={(e) => e.stopPropagation()} 
+            >
+                {/* Close button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-white text-3xl font-bold z-50 opacity-80 hover:opacity-100 transition"
+                >
+                    &times; {/* Dấu X */}
+                </button>
+
+                {/* Image view */}
+                <div className="relative w-[80vw] h-[80vh]">
+                    <Image
+                        src={src}
+                        alt="Hình ảnh lớn"
+                        layout="fill"
+                        objectFit="contain"
+                        unoptimized={true}
+                        className="rounded-lg shadow-2xl"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 /**
  * Renders a single incident row using a responsive grid layout.
  * OPTIMIZATION 2: Wrapped in React.memo() to prevent unnecessary re-renders.
  */
 const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident, isExpanded: boolean, onToggle: (id: string) => void }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentImage, setCurrentImage] = useState('');
+
+  const openImageModal = (url: string) => {
+      setCurrentImage(url);
+      setIsModalOpen(true);
+  };
+
+  const closeImageModal = () => {
+      setIsModalOpen(false);
+      setCurrentImage('');
+  };
   return (
     <div 
         className={`bg-white p-3 mb-3 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-150`}>
@@ -158,20 +207,39 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
           className={`cursor-pointer grid grid-cols-4 gap-x-3 items-start md:items-center`}
       >
         
-        {/* 1. ID Sự Cố (Col 1) - Primary ID */}
+        {/* 1. ID Sự Cố (Col 1) */}
         <div className="flex flex-col col-span-1">
-            {/* Label kept for ID Sự Cố on mobile for clarity */}
             <span className="text-xs font-medium text-gray-500 md:hidden block">ID Sự Cố</span> 
-            <div className="flex items-center space-x-1 mb-0.5">
+
+            <div 
+                // 🚨 Attach the handler to the wrapper div
+                onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
+                
+                className={`
+                    inline-flex items-center space-x-2 p-1 px-2 rounded-lg transition-all duration-200
+                    border border-dashed border-gray-300 hover:border-solid hover:border-indigo-400
+                    cursor-pointer active:bg-indigo-50
+                `}
+            >
+                {/* The ID Text */}
                 <span className="text-sm font-bold text-indigo-700">{item.id}</span>
-                <button 
-                    onClick={(e) => { e.stopPropagation(); copyToClipboard(item.id); }}
-                    className="p-3 text-2xl text-gray-400 active:text-indigo-600 transition-colors"
-                    title="Copy ID"
-                    >
-                    {/* Copy Icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                </button>
+                
+                {/* The Icon (Slightly reduced size for better embedding) */}
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-gray-400 group-hover:text-indigo-600 transition-colors"
+                >
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
             </div>
         </div>
 
@@ -240,14 +308,16 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
                     <DetailField
                       label="Hình Ảnh Sự Cố"
                       value={
-                          // 1. Kiểm tra: tồn tại, là mảng, và không rỗng
                           item.images && Array.isArray(item.images) && item.images.length > 0 ? (
                               <div className="flex flex-wrap gap-4 mt-2">
-                                  {/* 2. Khai báo kiểu dữ liệu cho tham số trong map() */}
                                   {item.images.map((imageUrl: string, index: number) => (
-                                      <div key={index} className="relative w-48 h-32 md:w-60 md:h-40 flex-shrink-0">
+                                      <div 
+                                          key={index} 
+                                          className="relative w-48 h-32 md:w-60 md:h-40 flex-shrink-0 cursor-pointer"
+                                          onClick={() => openImageModal(imageUrl)} 
+                                      >
                                           <Image
-                                              src={imageUrl} // Bây giờ TypeScript biết chắc đây là một chuỗi
+                                              src={imageUrl}
                                               alt={`Hình ảnh sự cố ${item.id} - ${index + 1}`}
                                               layout="fill"
                                               objectFit="cover"
@@ -270,7 +340,11 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
             </div>
         </div>
       )}
-      
+      <ImageModal 
+            src={currentImage} 
+            isOpen={isModalOpen} 
+            onClose={closeImageModal} 
+        />
     </div>
   );
 }); // End of React.memo for IncidentRow
