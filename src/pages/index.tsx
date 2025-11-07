@@ -207,7 +207,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
       {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices) 🛑 */}
       <div 
           onClick={(e) => {onToggle(item.id); (e.currentTarget as HTMLElement).blur();}}
-          className="cursor-pointer grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 gap-x-3 items-start md:items-center"
+          className="cursor-pointer grid grid-cols-[repeat(auto-fit,minmax(50px,1fr))] gap-x-3 items-start md:items-center"
       >
         
         {/* 1. ID Sự Cố (Col 1) */}
