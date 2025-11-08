@@ -117,7 +117,7 @@ const StatusPill = ({ status }: { status: string }) => {
  */
 const DetailField = ({ label, value, colorClass = 'text-gray-700' }: { label: string, value: string | React.ReactNode, colorClass?: string }) => (
     <div className="flex flex-col mb-3">
-        <span className="text-xs font-bold uppercase text-sky-500">{label}</span>
+        <span className="text-xs font-bold uppercase text-sky-800">{label}</span>
         <span className={`text-sm font-medium mt-0.5 ${colorClass}`}>
           {value}
         </span>
@@ -207,7 +207,7 @@ const IncidentRow = React.memo(({ item, isExpanded, onToggle }: { item: Incident
       {/* 🛑 CONDENSED VIEW (Optimized 4-Column Layout for all devices) 🛑 */}
       <div 
           onClick={(e) => {onToggle(item.id); (e.currentTarget as HTMLElement).blur();}}
-          className="grid grid-cols-[minmax(80px,1fr)_minmax(40px,1fr)_minmax(50px,1fr)_minmax(90px,1fr)_minmax(20px,1fr)] gap-x-3"
+          className="grid grid-cols-[minmax(80px,1fr)_minmax(40px,1fr)_minmax(60px,1fr)_minmax(80px,1fr)_minmax(20px,1fr)] gap-x-3"
       >
         
         {/* 1. ID Sự Cố (Col 1) */}
