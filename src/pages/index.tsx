@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 // ADD THESE FIRESTORE IMPORTS
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, getDocs } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useTimeAgo } from '../hooks/useTimeAgo';
 import Image from 'next/image';
 import Portal from '../components/Portal';
-//import { IncidentActions } from '../components/IncidentActions';
+import { IncidentActions } from '../components/IncidentActions';
 
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
@@ -376,6 +376,9 @@ export default function App() {
     setExpandedId(prevId => (prevId === id ? null : id));
   }, []);
 
+  const [validUsers, setValidUsers] = useState<string[]>([]);
+  const [validMachines, setValidMachines] = useState<string[]>([]);
+
   // REPLACE YOUR EXISTING useEffect WITH THIS FIRESTORE REAL-TIME LISTENER
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
@@ -394,6 +397,18 @@ export default function App() {
           orderBy('status', 'desc'),
           orderBy('reportDate', 'desc') // Optional: order by
         );
+
+        const usersRef = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersRef);
+        const fetchedUsers = usersSnapshot.docs.map(doc => doc.data().name).filter(Boolean);
+        setValidUsers(fetchedUsers); 
+        console.log(`Fetched ${fetchedUsers.length} valid users.`);
+
+        const machinesRef = collection(db, 'machines');
+        const machinesSnapshot = await getDocs(machinesRef);
+        const fetchedMachines = machinesSnapshot.docs.map(doc => doc.data().type).filter(Boolean);
+        setValidMachines(fetchedMachines);
+        console.log(`Fetched ${fetchedMachines.length} machine types.`);
 
         // Set up real-time listener
         unsubscribe = onSnapshot(
@@ -526,7 +541,11 @@ export default function App() {
             </div>
         )}
 
-        {/*<IncidentActions />*/}
+        <div className="p-4 bg-yellow-100 rounded">
+            <p>Users: {validUsers.join(', ')}</p>
+            <p>Machines: {validMachines.join(', ')}</p>
+        </div>
+        <IncidentActions validUsers={validUsers} validMachines={validMachines} />
 
         {/* Keep all your existing filter bar and table rendering logic */}
         {!loading && !fetchError && (

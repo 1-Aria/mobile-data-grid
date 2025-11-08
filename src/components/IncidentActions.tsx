@@ -125,11 +125,12 @@ const closeFields: FormField[] = [
     { id: 'close-notes', label: 'Ghi Chú Đóng (Closing Notes)', placeholder: 'Mô tả cách thức xử lý, lý do đóng...', type: 'textarea' },
 ];
 
-/**
- * Main component to render the tabs and forms
- */
+interface IncidentActionsProps {
+    validUsers: string[];
+    validMachines: string[];
+}
 
-export const IncidentActions: React.FC = () => {
+export const IncidentActions: React.FC<IncidentActionsProps> = () => {
 // ... existing useState and handleTabClick ...
 // This state tracks which tab is currently open, or null if all are closed
     const [activeTab, setActiveTab] = useState<ActionTab | null>(null);
