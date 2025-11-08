@@ -67,7 +67,7 @@ const DurationFieldDisplay: React.FC<{
         shouldBeDynamic = true;
     } 
     // Rule B: If status is "Pending", only closePending is dynamic
-    else if (currentStatus.toLowerCase() === 'In progress') {
+    else if (currentStatus.toLowerCase() === 'in progress') {
         if (pendingField === 'closePending') {
             shouldBeDynamic = true;
         } else {
