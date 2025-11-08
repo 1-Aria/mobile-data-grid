@@ -6,7 +6,7 @@ import { db } from '../utils/firebase';
 import { useTimeAgo } from '../hooks/useTimeAgo';
 import Image from 'next/image';
 import Portal from '../components/Portal';
-import { IncidentActions } from '../components/IncidentActions';
+//import { IncidentActions } from '../components/IncidentActions';
 
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
@@ -68,7 +68,7 @@ const DurationFieldDisplay: React.FC<{
         shouldBeDynamic = true;
     } 
     // Rule B: If status is "Pending", only closePending is dynamic
-    else if (currentStatus.toLowerCase() === 'In progress') {
+    else if (currentStatus.toLowerCase() === 'in progress') {
         if (pendingField === 'closePending') {
             shouldBeDynamic = true;
         } else {
@@ -526,7 +526,7 @@ export default function App() {
             </div>
         )}
 
-        <IncidentActions />
+        {/*<IncidentActions />*/}
 
         {/* Keep all your existing filter bar and table rendering logic */}
         {!loading && !fetchError && (
