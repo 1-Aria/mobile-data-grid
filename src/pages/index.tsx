@@ -6,6 +6,7 @@ import { db } from '../utils/firebase';
 import { useTimeAgo } from '../hooks/useTimeAgo';
 import Image from 'next/image';
 import Portal from '../components/Portal';
+import { IncidentActions } from '../components/IncidentActions';
 
 // --- TYPE DEFINITION: Uses readable English properties mapped from Vietnamese keys ---
 interface Incident {
@@ -524,6 +525,8 @@ export default function App() {
                 <p className="text-sm">{fetchError}</p>
             </div>
         )}
+
+        <IncidentActions />
 
         {/* Keep all your existing filter bar and table rendering logic */}
         {!loading && !fetchError && (
