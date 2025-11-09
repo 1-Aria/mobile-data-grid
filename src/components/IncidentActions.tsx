@@ -165,7 +165,7 @@ const assignFields: FormField[] = [
 // Define the fields for the "Close" form
 const closeFields: FormField[] = [
     { id: 'close-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
-    { id: 'close-notes', label: 'Ghi Chú Đóng (Closing Notes)', placeholder: 'Mô tả cách thức xử lý, lý do đóng...', type: 'textarea' },
+    { id: 'close-user', label: 'Người đóng', placeholder: 'Tên người đóng sự cố...', type: 'input' },
 ];
 
 interface IncidentActionsProps {
@@ -202,7 +202,7 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
         let isValid = true;
         const trimmedValue = value.trim();
 
-        if (['register-reporter', 'assign-user'].includes(id)) { 
+        if (['register-reporter', 'assign-user', 'close-user'].includes(id)) { 
             if (!trimmedValue) {
                 // Required check
                 message = `${id.includes('reporter') ? 'Reporter' : 'Assignee'} is required.`;
@@ -232,7 +232,7 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
             }
         }
 
-        else if (['register-summary', 'assign-id', 'close-id', 'close-notes'].includes(id)) {
+        else if (['register-summary', 'assign-id', 'close-id'].includes(id)) {
             if (!trimmedValue) {
                 // Dynamically generate the field name (e.g., 'summary', 'id', 'notes')
                 message = `${id.split('-')[1]} is required.`;
