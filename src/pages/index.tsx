@@ -551,21 +551,6 @@ export default function App() {
             </div>
         )}
 
-        <div className="p-4 bg-yellow-100 rounded border border-yellow-300">
-            <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debugging Data Check:</h3>
-            
-            {/* 1. Users (Array of Strings - Works with join) */}
-            <p className="text-sm text-yellow-900">
-                <span className="font-medium">Valid Users:</span> {validUsers.join(', ')}
-            </p>
-
-            {/* 2. Machines (Array of Objects - Needs mapping before join) */}
-            <p className="text-sm text-yellow-900">
-                <span className="font-medium">Valid Machines (ID/Type):</span> 
-                {/* We map the objects to strings like "ID:Type" before joining them */}
-                {validMachines.map(m => `${m.id}: ${m.type}`).join(' | ')} 
-            </p>
-        </div>
         <IncidentActions validUsers={validUsers} validMachines={validMachines} />
 
         {/* Keep all your existing filter bar and table rendering logic */}

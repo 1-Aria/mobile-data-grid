@@ -6,7 +6,8 @@ type ActionTab = 'register' | 'assign' | 'close';
 /**
  * A shared, styled input field for the forms
  */
-const FormInput = ({ label, id, ...props }: { label: string; id: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
+// Added validationMessage prop to FormInput/FormTextarea
+const FormInput = ({ label, id, validationMessage, ...props }: { label: string; id: string; validationMessage?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
         <input
@@ -15,13 +16,19 @@ const FormInput = ({ label, id, ...props }: { label: string; id: string } & Reac
             className="p-2 w-full border border-gray-300 rounded-md text-sm text-gray-800 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500"
             {...props}
         />
+        {/* Validation Feedback */}
+        {validationMessage && (
+            <p className={`mt-1 text-xs ${validationMessage.startsWith('Valid') ? 'text-green-600' : 'text-red-600'}`}>
+                {validationMessage}
+            </p>
+        )}
     </div>
 );
 
 /**
  * A shared, styled text area for the forms
  */
-const FormTextarea = ({ label, id, ...props }: { label: string; id: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
+const FormTextarea = ({ label, id, validationMessage, ...props }: { label: string; id: string; validationMessage?: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
         <textarea
@@ -30,16 +37,28 @@ const FormTextarea = ({ label, id, ...props }: { label: string; id: string } & R
             className="p-2 w-full border border-gray-300 rounded-md text-sm text-gray-800 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500"
             {...props}
         />
+        {/* Validation Feedback */}
+        {validationMessage && (
+            <p className={`mt-1 text-xs ${validationMessage.startsWith('Valid') ? 'text-green-600' : 'text-red-600'}`}>
+                {validationMessage}
+            </p>
+        )}
     </div>
 );
 
 /**
- * A shared, styled submit button
+ * A shared, styled submit button (Now disabled if any errors are present)
  */
-const SubmitButton = ({ children }: { children: React.ReactNode }) => (
+const SubmitButton = ({ children, disabled }: { children: React.ReactNode, disabled: boolean }) => (
     <button
         type="submit"
-        className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        disabled={disabled}
+        className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 
+            ${disabled 
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500'
+            }
+        `}
     >
         {children}
     </button>
@@ -49,52 +68,76 @@ interface ReusableFormProps {
     fields: FormField[];
     onSubmit: (formData: Record<string, string>) => void;
     submitLabel: string;
+    // New validation props
+    onFieldChange: (id: string, value: string) => void;
+    validationStatus: Record<string, { message: string, isValid: boolean }>;
 }
 
 /**
  * A reusable form component that renders fields based on a config object.
  */
-const ReusableForm: React.FC<ReusableFormProps> = ({ fields, onSubmit, submitLabel }) => {
+const ReusableForm: React.FC<ReusableFormProps> = ({ fields, onSubmit, submitLabel, onFieldChange, validationStatus }) => {
     // State to hold all form data
     const [formData, setFormData] = useState<Record<string, string>>(
         // Initialize state with empty strings for each field ID
         fields.reduce((acc, field) => ({ ...acc, [field.id]: '' }), {})
     );
 
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.id]: e.target.value,
-        });
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+        onFieldChange(id, value);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Add form validation logic here before submitting
+        setHasAttemptedSubmit(true);
+
+        // Check for any invalid fields in the current form's fields
+        const isFormValid = fields.every(field => validationStatus[field.id]?.isValid === true);
+
+        if (!isFormValid) {
+            console.error("Submission blocked: Form contains invalid fields.");
+            // Optionally set a general error message here
+            return;
+        }
+
         onSubmit(formData);
-        // Optional: Clear form after submission
+        // Clear form after successful submission
         setFormData(fields.reduce((acc, field) => ({ ...acc, [field.id]: '' }), {}));
+        setHasAttemptedSubmit(false);
     };
+    
+    // Determine if the submit button should be disabled
+    const hasError = fields.some(field => validationStatus[field.id]?.isValid === false);
+
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {fields.map(field => {
+                const status = validationStatus[field.id];
+
                 const commonProps = {
                     id: field.id,
                     label: field.label,
                     placeholder: field.placeholder,
                     value: formData[field.id],
                     onChange: handleChange,
-                    required: true, // Example: make all fields required
+                    required: true, 
+                    // Pass the message for display
+                    validationMessage: status ? status.message : undefined
                 };
                 
                 if (field.type === 'textarea') {
-                return <FormTextarea key={field.id} {...commonProps} />;
+                    return <FormTextarea key={field.id} {...commonProps} />;
                 }
-
+                
                 return <FormInput key={field.id} {...commonProps} />;
             })}
-            <SubmitButton>{submitLabel}</SubmitButton>
+            {/* Submit button is disabled if there are any errors */}
+            <SubmitButton disabled={hasError && hasAttemptedSubmit}>{submitLabel}</SubmitButton>
         </form>
     );
 };
@@ -110,7 +153,7 @@ type FormField = {
 const registerFields: FormField[] = [
     { id: 'register-summary', label: 'Mô Tả Sự Cố (Summary)', placeholder: 'Mô tả chi tiết sự cố...', type: 'textarea' },
     { id: 'register-reporter', label: 'Người Báo (Reporter)', placeholder: 'Tên người báo cáo...', type: 'input' },
-    { id: 'register-machine', label: 'Loại Máy (Machine Type)', placeholder: 'Vd: Máy Dập, Máy Cắt...', type: 'input' },
+    { id: 'register-machine', label: 'Mã Máy (Machine ID)', placeholder: 'Vd: MCH-001', type: 'input' }, // Changed label to reflect ID input
 ];
 
 // Define the fields for the "Assign" form
@@ -135,100 +178,163 @@ interface MachineLookup {
     type: string; // The corresponding machine type (for display/context)
 }
 
-export const IncidentActions: React.FC<IncidentActionsProps> = ({validUsers, validMachines}) => {
-// This state tracks which tab is currently open, or null if all are closed
+/**
+ * Main component to render the tabs and forms
+ */
+export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, validMachines }) => {
     const [activeTab, setActiveTab] = useState<ActionTab | null>(null);
+    // State to hold validation messages/status for all possible fields
+    const [validationStatus, setValidationStatus] = useState<Record<string, { message: string, isValid: boolean }>>({});
 
-    // This logic handles the expand/condense toggle behavior
     const handleTabClick = (tabName: ActionTab) => {
         if (activeTab === tabName) {
-            // If the clicked tab is already open, close it
             setActiveTab(null);
         } else {
-            // Otherwise, open the clicked tab
             setActiveTab(tabName);
+            // Optional: Clear validation status when switching tabs
+            setValidationStatus({}); 
+        }
+    };
+    
+    // 💡 NEW: Centralized validation function triggered by form field changes
+    const handleValidation = (id: string, value: string) => {
+        let message = '';
+        let isValid = true;
+        
+        // 1. Validation for Register Reporter (must be a valid user)
+        if (id === 'register-reporter') {
+            const trimmedValue = value.trim();
+            if (!trimmedValue) {
+                message = 'Reporter is required.';
+                isValid = false;
+            } else if (validUsers.includes(trimmedValue)) {
+                message = 'Valid User.';
+            } else {
+                message = 'Invalid or unrecognized user name.';
+                isValid = false;
+            }
+        }
+        
+        // 2. Validation for Register Machine ID
+        else if (id === 'register-machine') {
+            const trimmedValue = value.trim();
+            const foundMachine = validMachines.find(m => m.id === trimmedValue);
+
+            if (!trimmedValue) {
+                message = 'Machine ID is required.';
+                isValid = false;
+            } else if (foundMachine) {
+                // Success: Show the machine type
+                message = `Valid ID. Machine Type: ${foundMachine.type}`;
+            } else {
+                message = 'Invalid Machine ID. Please check the ID.';
+                isValid = false;
+            }
+        }
+
+        // 3. Validation for Assign To User
+        else if (id === 'assign-user') {
+            const trimmedValue = value.trim();
+            if (!trimmedValue) {
+                message = 'Assignee is required.';
+                isValid = false;
+            } else if (validUsers.includes(trimmedValue)) {
+                message = 'Valid User.';
+            } else {
+                message = 'Invalid or unrecognized user name.';
+                isValid = false;
+            }
+        }
+        
+        // Update the status only for fields where validation logic ran
+        if (message) {
+            setValidationStatus(prev => ({ ...prev, [id]: { message, isValid } }));
+        } else {
+            // Clear message/status if validation is not needed for this field type 
+            // or if the field is empty and we don't want to show an error yet.
+            setValidationStatus(prev => {
+                const newStatus = { ...prev };
+                delete newStatus[id];
+                return newStatus;
+            });
         }
     };
 
-    // +++ ADD NEW SUBMIT HANDLERS +++
+
+    // --- SUBMIT HANDLERS (Simplified validation removed, relies on real-time state) ---
+    
     const handleRegisterSubmit = (formData: Record<string, string>) => {
-        const machineIdInput = formData['register-machine'];
-        const foundMachine = validMachines.find(m => m.id === machineIdInput);
-        if (!foundMachine) {
-            return; 
-        }
-
-        const assignedUser = formData['assign-user'];
-        // 💡 Validation check for the assigned user
-        if (!validUsers.includes(assignedUser)) {
-            // We halt the submission if validation fails
-            return; 
-        }
-        // If validation passes, proceed with the API call
-
+        console.log("Submitting new incident (Validation passed):", formData);
+        // Actual API call/Firestore write goes here...
         setActiveTab(null);
+        setValidationStatus({});
     };
 
     const handleAssignSubmit = (formData: Record<string, string>) => {
-        // TODO: Form validation and API call
-        console.log("Assigning incident:", formData);
-        // Close the tab after submission
+        console.log("Assigning incident (Validation passed):", formData);
+        // Actual API call/Firestore write goes here...
         setActiveTab(null);
+        setValidationStatus({});
     };
 
     const handleCloseSubmit = (formData: Record<string, string>) => {
-        // TODO: Form validation and API call
-        console.log("Closing incident:", formData);
-        // Close the tab after submission
+        console.log("Closing incident (No complex validation needed):", formData);
+        // Actual API call/Firestore write goes here...
         setActiveTab(null);
+        setValidationStatus({});
     };
-
 
     // Renders the correct form based on the active tab
     const renderActiveForm = () => {
+        // Shared props for the ReusableForm
+        const sharedFormProps = {
+            onFieldChange: handleValidation,
+            validationStatus: validationStatus
+        };
+
         switch (activeTab) {
             case 'register':
-                // --- MODIFY RENDER ---
                 return <ReusableForm 
                     fields={registerFields} 
                     onSubmit={handleRegisterSubmit} 
                     submitLabel="Đăng Ký Sự Cố" 
+                    {...sharedFormProps}
                 />;
             case 'assign':
-                // --- MODIFY RENDER ---
                 return <ReusableForm 
                     fields={assignFields} 
                     onSubmit={handleAssignSubmit} 
                     submitLabel="Gán Trách Nhiệm" 
+                    {...sharedFormProps}
                 />;
             case 'close':
-                // --- MODIFY RENDER ---
+                // Note: For 'close' fields, simple required checks are done implicitly
                 return <ReusableForm 
                     fields={closeFields} 
                     onSubmit={handleCloseSubmit} 
                     submitLabel="Đóng Sự Cố" 
+                    {...sharedFormProps}
                 />;
             default:
-                return null; // No tab is active, render nothing
+                return null;
         }
     };
 
-// Helper to get conditional classes for active/inactive tabs
+    // Helper to get conditional classes for active/inactive tabs
     const getTabClassName = (tabName: ActionTab) => {
         const isActive = activeTab === tabName;
         return `
             px-4 py-2 text-sm font-medium rounded-t-lg transition-colors
             focus:outline-none focus:ring-2 focus:ring-indigo-400
             ${isActive
-                ? 'bg-indigo-600 text-white shadow-md' // Active tab
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300' // Inactive tab
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }
         `;
     };
 
     return (
         <div className="w-full max-w-4xl mx-auto mb-4">
-            {/* 1. The Tab Buttons */}
             <div className="flex space-x-1">
                 <button
                     onClick={() => handleTabClick('register')}
@@ -251,7 +357,6 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({validUsers, val
             </div>
 
             {/* 2. The Form Container */}
-            {/* This container only renders if a tab is active, creating the expand/collapse effect */}
             {activeTab && (
                 <div className="bg-white p-4 rounded-b-lg rounded-r-lg shadow-lg border border-gray-200">
                     {renderActiveForm()}
