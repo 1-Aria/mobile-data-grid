@@ -200,16 +200,18 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
     const handleValidation = (id: string, value: string) => {
         let message = '';
         let isValid = true;
-        
-        // 1. Validation for Register Reporter (must be a valid user)
-        if (id === 'register-reporter') {
-            const trimmedValue = value.trim();
+        const trimmedValue = value.trim();
+
+        if (['register-reporter', 'assign-user'].includes(id)) { 
             if (!trimmedValue) {
-                message = 'Reporter is required.';
+                // Required check
+                message = `${id.includes('reporter') ? 'Reporter' : 'Assignee'} is required.`;
                 isValid = false;
             } else if (validUsers.includes(trimmedValue)) {
+                // User lookup check (Success)
                 message = 'Valid User.';
             } else {
+                // User lookup check (Failure)
                 message = 'Invalid or unrecognized user name.';
                 isValid = false;
             }
@@ -217,9 +219,7 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
         
         // 2. Validation for Register Machine ID
         else if (id === 'register-machine') {
-            const trimmedValue = value.trim();
             const foundMachine = validMachines.find(m => m.id === trimmedValue);
-
             if (!trimmedValue) {
                 message = 'Machine ID is required.';
                 isValid = false;
@@ -232,18 +232,13 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
             }
         }
 
-        // 3. Validation for Assign To User
-        else if (id === 'assign-user') {
-            const trimmedValue = value.trim();
+        else if (['register-summary', 'assign-id', 'close-id', 'close-notes'].includes(id)) {
             if (!trimmedValue) {
-                message = 'Assignee is required.';
-                isValid = false;
-            } else if (validUsers.includes(trimmedValue)) {
-                message = 'Valid User.';
-            } else {
-                message = 'Invalid or unrecognized user name.';
+                // Dynamically generate the field name (e.g., 'summary', 'id', 'notes')
+                message = `${id.split('-')[1]} is required.`;
                 isValid = false;
             }
+            // If it's not empty, it's considered valid for simple text fields.
         }
         
         // Update the status only for fields where validation logic ran
