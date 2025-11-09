@@ -377,7 +377,11 @@ export default function App() {
   }, []);
 
   const [validUsers, setValidUsers] = useState<string[]>([]);
-  const [validMachines, setValidMachines] = useState<string[]>([]);
+    interface MachineLookup {
+      id: string;
+      type: string;
+  }
+  const [validMachines, setValidMachines] = useState<MachineLookup[]>([]);
 
   // REPLACE YOUR EXISTING useEffect WITH THIS FIRESTORE REAL-TIME LISTENER
   useEffect(() => {
@@ -406,7 +410,13 @@ export default function App() {
 
         const machinesRef = collection(db, 'machines');
         const machinesSnapshot = await getDocs(machinesRef);
-        const fetchedMachines = machinesSnapshot.docs.map(doc => doc.data().type).filter(Boolean);
+        const fetchedMachines: MachineLookup[] = machinesSnapshot.docs.map(doc => {
+        const data = doc.data();
+            return {
+                id: data.id, 
+                type: data.type 
+            };
+        });
         setValidMachines(fetchedMachines);
         console.log(`Fetched ${fetchedMachines.length} machine types.`);
 
@@ -541,9 +551,20 @@ export default function App() {
             </div>
         )}
 
-        <div className="p-4 bg-yellow-100 rounded">
-            <p>Users: {validUsers.join(', ')}</p>
-            <p>Machines: {validMachines.join(', ')}</p>
+        <div className="p-4 bg-yellow-100 rounded border border-yellow-300">
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debugging Data Check:</h3>
+            
+            {/* 1. Users (Array of Strings - Works with join) */}
+            <p className="text-sm text-yellow-900">
+                <span className="font-medium">Valid Users:</span> {validUsers.join(', ')}
+            </p>
+
+            {/* 2. Machines (Array of Objects - Needs mapping before join) */}
+            <p className="text-sm text-yellow-900">
+                <span className="font-medium">Valid Machines (ID/Type):</span> 
+                {/* We map the objects to strings like "ID:Type" before joining them */}
+                {validMachines.map(m => `${m.id}: ${m.type}`).join(' | ')} 
+            </p>
         </div>
         <IncidentActions validUsers={validUsers} validMachines={validMachines} />
 

@@ -127,11 +127,15 @@ const closeFields: FormField[] = [
 
 interface IncidentActionsProps {
     validUsers: string[];
-    validMachines: string[];
+    validMachines: MachineLookup[];
 }
 
-export const IncidentActions: React.FC<IncidentActionsProps> = () => {
-// ... existing useState and handleTabClick ...
+interface MachineLookup {
+    id: string;   // The value the user inputs (for validation)
+    type: string; // The corresponding machine type (for display/context)
+}
+
+export const IncidentActions: React.FC<IncidentActionsProps> = ({validUsers, validMachines}) => {
 // This state tracks which tab is currently open, or null if all are closed
     const [activeTab, setActiveTab] = useState<ActionTab | null>(null);
 
@@ -148,9 +152,20 @@ export const IncidentActions: React.FC<IncidentActionsProps> = () => {
 
     // +++ ADD NEW SUBMIT HANDLERS +++
     const handleRegisterSubmit = (formData: Record<string, string>) => {
-        // TODO: Form validation and API call
-        console.log("Submitting new incident:", formData);
-        // Close the tab after submission
+        const machineIdInput = formData['register-machine'];
+        const foundMachine = validMachines.find(m => m.id === machineIdInput);
+        if (!foundMachine) {
+            return; 
+        }
+
+        const assignedUser = formData['assign-user'];
+        // 💡 Validation check for the assigned user
+        if (!validUsers.includes(assignedUser)) {
+            // We halt the submission if validation fails
+            return; 
+        }
+        // If validation passes, proceed with the API call
+
         setActiveTab(null);
     };
 
