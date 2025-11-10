@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 // Define a type for the tab IDs for type safety
-type ActionTab = 'register' | 'assign' | 'close';
+type ActionTab = 'register' | 'assign' | 'close' | 'report';
 
 /**
  * A shared, styled input field for the forms
@@ -168,6 +168,10 @@ const closeFields: FormField[] = [
     { id: 'close-user', label: 'Người đóng', placeholder: 'Tên người đóng sự cố...', type: 'input' },
 ];
 
+const reportFields: FormField[] = [
+    { id: 'report-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
+];
+
 interface IncidentActionsProps {
     validUsers: string[];
     validMachines: MachineLookup[];
@@ -185,6 +189,7 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
     const [activeTab, setActiveTab] = useState<ActionTab | null>(null);
     // State to hold validation messages/status for all possible fields
     const [validationStatus, setValidationStatus] = useState<Record<string, { message: string, isValid: boolean }>>({});
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const handleTabClick = (tabName: ActionTab) => {
         if (activeTab === tabName) {
@@ -255,6 +260,10 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
         }
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files ? e.target.files[0] : null;
+        setSelectedFile(file);
+    };
 
     // --- SUBMIT HANDLERS (Simplified validation removed, relies on real-time state) ---
     
@@ -275,6 +284,57 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
     const handleCloseSubmit = (formData: Record<string, string>) => {
         console.log("Closing incident (No complex validation needed):", formData);
         // Actual API call/Firestore write goes here...
+        setActiveTab(null);
+        setValidationStatus({});
+    };
+
+    const CLOUD_RUN_ENDPOINT = "YOUR_CLOUD_RUN_SERVICE_URL"; 
+
+    const handleReportSubmit = async (formData: Record<string, string>) => {
+        console.log("Starting Cloud Run Upload...");
+        
+        // 1. Create FormData payload
+        const data = new FormData();
+        
+        // Append all text fields
+        Object.keys(formData).forEach(key => {
+            data.append(key, formData[key]);
+        });
+
+        // Append the file (if one was selected)
+        if (selectedFile) {
+            // 'image' must match the expected field name in your Cloud Run service handler
+            data.append('image', selectedFile, selectedFile.name); 
+        }
+        
+        try {
+            // 2. Send the POST request to Cloud Run
+            const response = await fetch(CLOUD_RUN_ENDPOINT, {
+                method: 'POST',
+                // IMPORTANT: Do NOT manually set Content-Type header; fetch does it automatically 
+                // when sending FormData, including the boundary string needed for files.
+                body: data, 
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Cloud Run request failed: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log("Upload successful. Cloud Run response:", result);
+
+            // Your Cloud Run service should return the final incident data, 
+            // including the public image URL if it was uploaded to storage.
+            
+        } catch (error) {
+            console.error("Failed to submit incident via Cloud Run:", error);
+            // You would show an error message to the user here.
+            return;
+        }
+        
+        // Clear state and close form on success
+        setSelectedFile(null);
         setActiveTab(null);
         setValidationStatus({});
     };
@@ -310,6 +370,29 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
                     submitLabel="Đóng Sự Cố" 
                     {...sharedFormProps}
                 />;
+            case 'report':
+                return (
+                    <> 
+                        <ReusableForm 
+                            fields={reportFields} 
+                            onSubmit={handleReportSubmit} 
+                            submitLabel="Báo Cáo" 
+                            {...sharedFormProps}
+                        />
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <label htmlFor="report-file" className="block text-sm font-medium text-gray-700 mb-1">
+                                Tải ảnh lên (Tùy chọn)
+                            </label>
+                            <input 
+                                id="report-file"
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleFileChange} 
+                                className="p-2 w-full border border-gray-300 rounded-md text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                            />
+                        </div>
+                    </>
+                );
             default:
                 return null;
         }
