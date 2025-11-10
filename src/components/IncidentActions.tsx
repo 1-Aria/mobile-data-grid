@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { submitAction } from '../utils/api_client';
+import { submitFileAction } from '../utils/api_file_client';
 
 // Define a type for the tab IDs for type safety
 type ActionTab = 'register' | 'assign' | 'close' | 'report';
@@ -7,11 +9,12 @@ type ActionTab = 'register' | 'assign' | 'close' | 'report';
  * A shared, styled input field for the forms
  */
 // Added validationMessage prop to FormInput/FormTextarea
-const FormInput = ({ label, id, validationMessage, ...props }: { label: string; id: string; validationMessage?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
+const FormInput = ({ label, id, validationMessage, inputType = 'text', ...props }: { label: string; id: string; validationMessage?: string; inputType?: 'text' | 'password' } & React.InputHTMLAttributes<HTMLInputElement>) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
         <input
-            type="text"
+            // 👈 Use the passed inputType, defaulting to 'text'
+            type={inputType} 
             id={id}
             className="p-2 w-full border border-gray-300 rounded-md text-sm text-gray-800 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500"
             {...props}
@@ -63,6 +66,14 @@ const SubmitButton = ({ children, disabled }: { children: React.ReactNode, disab
         {children}
     </button>
 );
+
+const pinField: FormField = { 
+    id: 'pin', 
+    label: 'Mã PIN', 
+    placeholder: 'Nhập mã PIN của bạn', 
+    type: 'input',
+    inputType: 'password' // 👈 NEW PROPERTY to distinguish PIN
+};
 
 interface ReusableFormProps {
     fields: FormField[];
@@ -147,29 +158,34 @@ type FormField = {
     label: string;
     placeholder: string;
     type: 'input' | 'textarea';
+    inputType?: 'text' | 'password';
 };
 
 // Define the fields for the "Register" form
 const registerFields: FormField[] = [
     { id: 'register-summary', label: 'Mô Tả Sự Cố (Summary)', placeholder: 'Mô tả chi tiết sự cố...', type: 'textarea' },
     { id: 'register-reporter', label: 'Người Báo (Reporter)', placeholder: 'Tên người báo cáo...', type: 'input' },
-    { id: 'register-machine', label: 'Mã Máy (Machine ID)', placeholder: 'Vd: MCH-001', type: 'input' }, // Changed label to reflect ID input
+    { id: 'register-machine', label: 'Mã Máy (Machine ID)', placeholder: 'Vd: MCH-001', type: 'input' }, 
+    pinField,
 ];
 
 // Define the fields for the "Assign" form
 const assignFields: FormField[] = [
     { id: 'assign-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để gán...', type: 'input' },
     { id: 'assign-user', label: 'Gán Cho (Assign To)', placeholder: 'Tên người hoặc bộ phận xử lý...', type: 'input' },
+    pinField,
 ];
 
 // Define the fields for the "Close" form
 const closeFields: FormField[] = [
     { id: 'close-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
     { id: 'close-user', label: 'Người đóng', placeholder: 'Tên người đóng sự cố...', type: 'input' },
+    pinField,
 ];
 
 const reportFields: FormField[] = [
     { id: 'report-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
+    pinField,
 ];
 
 interface IncidentActionsProps {
@@ -181,6 +197,13 @@ interface MachineLookup {
     id: string;   // The value the user inputs (for validation)
     type: string; // The corresponding machine type (for display/context)
 }
+
+const ACTION_MAP: Record<ActionTab, string> = {
+    'register': 'register_incident',
+    'assign': 'assign_incident',
+    'close': 'close_incident',
+    'report': 'submit_report', 
+};
 
 /**
  * Main component to render the tabs and forms
@@ -237,14 +260,19 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
             }
         }
 
-        else if (['register-summary', 'assign-id', 'close-id'].includes(id)) {
-            if (!trimmedValue) {
-                // Dynamically generate the field name (e.g., 'summary', 'id', 'notes')
-                message = `${id.split('-')[1]} is required.`;
-                isValid = false;
+        else if (['register-summary', 'assign-id', 'close-id', 'report-id', 'pin'].includes(id)) { 
+        if (!trimmedValue) {
+            // Check if it's the PIN field to provide a specific message
+            if (id === 'pin') {
+                message = 'PIN is required for authorization.';
+            } else {
+                // Dynamically generate the field name
+                message = `${id.split('-')[1]} is required.`; 
             }
-            // If it's not empty, it's considered valid for simple text fields.
+            isValid = false;
         }
+        // If it's not empty, it's considered valid for simple text/PIN fields.
+    }
         
         // Update the status only for fields where validation logic ran
         if (message) {
@@ -267,76 +295,42 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
 
     // --- SUBMIT HANDLERS (Simplified validation removed, relies on real-time state) ---
     
-    const handleRegisterSubmit = (formData: Record<string, string>) => {
-        console.log("Submitting new incident (Validation passed):", formData);
-        // Actual API call/Firestore write goes here...
-        setActiveTab(null);
-        setValidationStatus({});
+    const handleRegisterSubmit = async (formData: Record<string, string>) => {
+        const success = await submitAction(ACTION_MAP['register'], formData);
+        if (success) {
+            setActiveTab(null);
+            setValidationStatus({});
+        }
     };
 
-    const handleAssignSubmit = (formData: Record<string, string>) => {
-        console.log("Assigning incident (Validation passed):", formData);
-        // Actual API call/Firestore write goes here...
-        setActiveTab(null);
-        setValidationStatus({});
+    const handleAssignSubmit = async (formData: Record<string, string>) => {
+        const success = await submitAction(ACTION_MAP['assign'], formData);
+        if (success) {
+            setActiveTab(null);
+            setValidationStatus({});
+        }
     };
 
-    const handleCloseSubmit = (formData: Record<string, string>) => {
-        console.log("Closing incident (No complex validation needed):", formData);
-        // Actual API call/Firestore write goes here...
-        setActiveTab(null);
-        setValidationStatus({});
+    const handleCloseSubmit = async (formData: Record<string, string>) => {
+        const success = await submitAction(ACTION_MAP['close'], formData);
+        if (success) {
+            setActiveTab(null);
+            setValidationStatus({});
+        }
     };
-
-    const CLOUD_RUN_ENDPOINT = "YOUR_CLOUD_RUN_SERVICE_URL"; 
 
     const handleReportSubmit = async (formData: Record<string, string>) => {
-        console.log("Starting Cloud Run Upload...");
-        
-        // 1. Create FormData payload
-        const data = new FormData();
-        
-        // Append all text fields
-        Object.keys(formData).forEach(key => {
-            data.append(key, formData[key]);
-        });
+    
+        const action = ACTION_MAP['report'];
 
-        // Append the file (if one was selected)
-        if (selectedFile) {
-            // 'image' must match the expected field name in your Cloud Run service handler
-            data.append('image', selectedFile, selectedFile.name); 
+        // Use the file-specific helper, passing the selectedFile state
+        const success = await submitFileAction(action, formData, selectedFile);
+
+        if (success) {
+            setSelectedFile(null); // Clear file state
+            setActiveTab(null);
+            setValidationStatus({});
         }
-        
-        try {
-            // 2. Send the POST request to Cloud Run
-            const response = await fetch(CLOUD_RUN_ENDPOINT, {
-                method: 'POST',
-                // IMPORTANT: Do NOT manually set Content-Type header; fetch does it automatically 
-                // when sending FormData, including the boundary string needed for files.
-                body: data, 
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Cloud Run request failed: ${response.status} - ${errorText}`);
-            }
-            
-            const result = await response.json();
-            console.log("Upload successful. Cloud Run response:", result);
-
-            // Your Cloud Run service should return the final incident data, 
-            // including the public image URL if it was uploaded to storage.
-            
-        } catch (error) {
-            console.error("Failed to submit incident via Cloud Run:", error);
-            // You would show an error message to the user here.
-            return;
-        }
-        
-        // Clear state and close form on success
-        setSelectedFile(null);
-        setActiveTab(null);
-        setValidationStatus({});
     };
 
     // Renders the correct form based on the active tab
@@ -431,6 +425,12 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
                     className={getTabClassName('close')}
                 >
                     Đóng Sự Cố
+                </button>
+                <button
+                    onClick={() => handleTabClick('report')}
+                    className={getTabClassName('report')}
+                >
+                    Nộp Báo Cáo
                 </button>
             </div>
 
