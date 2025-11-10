@@ -251,47 +251,56 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
         let isValid = true;
         const trimmedValue = value.trim();
 
+        // 1. Validation for ALL User Fields (Reporter and Assignee)
         if (['register-reporter', 'assign-user', 'close-user'].includes(id)) { 
             if (!trimmedValue) {
-                // Required check
+                // REQUIRED: Must set isValid = false to enforce completeness check on submit
                 message = `${id.includes('reporter') ? 'Reporter' : 'Assignee'} is required.`;
-                isValid = false;
+                isValid = false; 
             } else if (validUsers.includes(trimmedValue)) {
-                // User lookup check (Success)
+                // Success: Show positive message
                 message = 'Valid User.';
+                isValid = true;
             } else {
-                // User lookup check (Failure)
+                // REFERENCE FAILURE: Show warning, but keep validity TRUE for submission
                 message = 'Invalid or unrecognized user name.';
-                isValid = false;
+                isValid = true; // 👈 CRITICAL CHANGE: Set to TRUE (or let it default to true)
             }
         }
         
         // 2. Validation for Register Machine ID
         else if (id === 'register-machine') {
             const foundMachine = validMachines.find(m => m.id === trimmedValue);
+            
             if (!trimmedValue) {
+                // REQUIRED: Must set isValid = false
                 message = 'Machine ID is required.';
                 isValid = false;
             } else if (foundMachine) {
-                // Success: Show the machine type
+                // Success
                 message = `Valid ID. Machine Type: ${foundMachine.type}`;
+                isValid = true;
             } else {
+                // REFERENCE FAILURE: Show warning, but keep validity TRUE for submission
                 message = 'Invalid Machine ID. Please check the ID.';
-                isValid = false;
+                isValid = true; // 👈 CRITICAL CHANGE: Set to TRUE (or let it default to true)
             }
         }
 
         else if (['register-summary', 'assign-id', 'close-id', 'report-id', 'pin'].includes(id)) { 
-        if (!trimmedValue) {
-            // Check if it's the PIN field to provide a specific message
-            if (id === 'pin') {
-                message = 'PIN is required for authorization.';
+            if (!trimmedValue) {
+                // REQUIRED: Must set isValid = false to block submission if empty
+                if (id === 'pin') {
+                    message = 'PIN is required for authorization.';
+                } else {
+                    message = `${id.split('-')[1]} is required.`; 
+                }
+                isValid = false; // 👈 KEEP THIS FALSE
             } else {
-                // Dynamically generate the field name
-                message = `${id.split('-')[1]} is required.`; 
+                // If not empty, it's valid for submission
+                message = ''; 
+                isValid = true;
             }
-            isValid = false;
-        }
         // If it's not empty, it's considered valid for simple text/PIN fields.
     }
         
