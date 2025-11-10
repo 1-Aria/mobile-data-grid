@@ -536,6 +536,8 @@ export default function App() {
           Hệ Thống Báo Cáo Sự Cố
         </h1>
 
+        <IncidentActions validUsers={validUsers} validMachines={validMachines} />
+
         {loading && (
             <div className="text-center p-8 bg-white rounded-lg shadow-md mb-6">
                 <p className="text-lg font-medium text-indigo-700">
@@ -550,8 +552,6 @@ export default function App() {
                 <p className="text-sm">{fetchError}</p>
             </div>
         )}
-
-        <IncidentActions validUsers={validUsers} validMachines={validMachines} />
 
         {/* Keep all your existing filter bar and table rendering logic */}
         {!loading && !fetchError && (

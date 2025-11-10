@@ -103,22 +103,43 @@ const ReusableForm: React.FC<ReusableFormProps> = ({ fields, onSubmit, submitLab
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+      e.preventDefault();
+        // setHasAttemptedSubmit(true); // Keep this if you use it for styling
         setHasAttemptedSubmit(true);
+        let formIsGloballyComplete = true;
 
-        // Check for any invalid fields in the current form's fields
-        const isFormValid = fields.every(field => validationStatus[field.id]?.isValid === true);
-
-        if (!isFormValid) {
-            console.error("Submission blocked: Form contains invalid fields.");
-            // Optionally set a general error message here
+        // 1. Synchronously check if all required fields are filled out.
+        // We assume all fields in the array are required for submission.
+        fields.forEach(field => {
+            const value = formData[field.id] || '';
+            
+            if (value.trim() === '') {
+                formIsGloballyComplete = false;
+            }
+        });
+        
+        // 2. If the form is incomplete, block submission and display error messages.
+        if (!formIsGloballyComplete) {
+            console.error("Submission blocked: Required fields are incomplete.");
+            
+            // Force the parent's validation handler to run on all fields 
+            // to ensure required messages (like "PIN is required") appear.
+            fields.forEach(field => {
+                // Assuming props.onFieldChange is available here
+                onFieldChange(field.id, formData[field.id] || '');
+            });
+            
             return;
         }
 
+        // 3. Submit the form data.
+        // We submit even if the reference validation (e.g., "Invalid User") is showing.
         onSubmit(formData);
+        
         // Clear form after successful submission
         setFormData(fields.reduce((acc, field) => ({ ...acc, [field.id]: '' }), {}));
         setHasAttemptedSubmit(false);
+        // setHasAttemptedSubmit(false); // Keep this if you use it for styling
     };
     
     // Determine if the submit button should be disabled
