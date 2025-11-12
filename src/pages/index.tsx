@@ -376,9 +376,13 @@ export default function App() {
     setExpandedId(prevId => (prevId === id ? null : id));
   }, []);
 
-  const [validUsers, setValidUsers] = useState<string[]>([]);
+  interface UserLookup {
+      userId: string;
+      name: string;
+  }
+  const [validUsers, setValidUsers] = useState<UserLookup[]>([]);
     interface MachineLookup {
-      id: string;
+      machineId: string;
       type: string;
   }
   const [validMachines, setValidMachines] = useState<MachineLookup[]>([]);
@@ -404,7 +408,13 @@ export default function App() {
 
         const usersRef = collection(db, 'users');
         const usersSnapshot = await getDocs(usersRef);
-        const fetchedUsers = usersSnapshot.docs.map(doc => doc.data().name).filter(Boolean);
+        const fetchedUsers: UserLookup[] = usersSnapshot.docs.map(doc => {
+        const data = doc.data();
+            return {
+                userId: data.userId, 
+                name: data.name 
+            };
+          });
         setValidUsers(fetchedUsers); 
         console.log(`Fetched ${fetchedUsers.length} valid users.`);
 
@@ -413,7 +423,7 @@ export default function App() {
         const fetchedMachines: MachineLookup[] = machinesSnapshot.docs.map(doc => {
         const data = doc.data();
             return {
-                id: data.id, 
+                machineId: data.machineId, 
                 type: data.type 
             };
         });

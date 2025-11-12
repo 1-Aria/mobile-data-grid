@@ -184,38 +184,44 @@ type FormField = {
 
 // Define the fields for the "Register" form
 const registerFields: FormField[] = [
-    { id: 'register-summary', label: 'Mô Tả Sự Cố (Summary)', placeholder: 'Mô tả chi tiết sự cố...', type: 'textarea' },
-    { id: 'register-reporter', label: 'Người Báo (Reporter)', placeholder: 'Tên người báo cáo...', type: 'input' },
-    { id: 'register-machine', label: 'Mã Máy (Machine ID)', placeholder: 'Vd: MCH-001', type: 'input' }, 
+    { id: 'summary', label: 'Mô Tả Sự Cố (Summary)', placeholder: 'Mô tả chi tiết sự cố...', type: 'textarea' },
+    { id: 'reporter', label: 'ID Người Báo (Reporter)', placeholder: 'Tên người báo cáo...', type: 'input' },
+    { id: 'machineId', label: 'Mã Máy (Machine ID)', placeholder: 'Vd: MCH-001', type: 'input' }, 
     pinField,
 ];
 
 // Define the fields for the "Assign" form
 const assignFields: FormField[] = [
-    { id: 'assign-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để gán...', type: 'input' },
-    { id: 'assign-user', label: 'Gán Cho (Assign To)', placeholder: 'Tên người hoặc bộ phận xử lý...', type: 'input' },
+    { id: 'id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để gán...', type: 'input' },
+    { id: 'handler', label: 'ID Gán Cho (Assign To)', placeholder: 'Tên người hoặc bộ phận xử lý...', type: 'input' },
     pinField,
 ];
 
 // Define the fields for the "Close" form
 const closeFields: FormField[] = [
-    { id: 'close-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
-    { id: 'close-user', label: 'Người đóng', placeholder: 'Tên người đóng sự cố...', type: 'input' },
+    { id: 'id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
+    { id: 'closer', label: 'ID Người đóng', placeholder: 'Tên người đóng sự cố...', type: 'input' },
     pinField,
 ];
 
 const reportFields: FormField[] = [
-    { id: 'report-id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
+    { id: 'id', label: 'ID Sự Cố', placeholder: 'Nhập ID sự cố để đóng...', type: 'input' },
+    { id: 'processingStep', label: 'Bước xử lý', placeholder: 'Đã thực hiện xử lý...', type: 'textarea' },
     pinField,
 ];
 
 interface IncidentActionsProps {
-    validUsers: string[];
+    validUsers: UserLookup[];
     validMachines: MachineLookup[];
 }
 
+interface UserLookup {
+    userId: string;   // The value the user inputs (for validation)
+    name: string; // The corresponding machine type (for display/context)
+}
+
 interface MachineLookup {
-    id: string;   // The value the user inputs (for validation)
+    machineId: string;   // The value the user inputs (for validation)
     type: string; // The corresponding machine type (for display/context)
 }
 
@@ -252,25 +258,29 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
         const trimmedValue = value.trim();
 
         // 1. Validation for ALL User Fields (Reporter and Assignee)
-        if (['register-reporter', 'assign-user', 'close-user'].includes(id)) { 
+        if (['reporter', 'handler', 'closer'].includes(id)) { 
+            
+            // Search the validUsers array for a matching ID
+            const foundUser = validUsers.find(user => user.userId === trimmedValue);
+
             if (!trimmedValue) {
-                // REQUIRED: Must set isValid = false to enforce completeness check on submit
-                message = `${id.includes('reporter') ? 'Reporter' : 'Assignee'} is required.`;
+                // REQUIRED: Field is empty. This is the only time isValid is false.
+                message = 'User ID is required.'; 
                 isValid = false; 
-            } else if (validUsers.includes(trimmedValue)) {
-                // Success: Show positive message
-                message = 'Valid User.';
+            } else if (foundUser) {
+                // User lookup check (Success): Display the Name
+                message = `Valid ID. User: ${foundUser.name}`;
                 isValid = true;
             } else {
-                // REFERENCE FAILURE: Show warning, but keep validity TRUE for submission
-                message = 'Invalid or unrecognized user name.';
-                isValid = true; // 👈 CRITICAL CHANGE: Set to TRUE (or let it default to true)
+                // REFERENCE FAILURE: Show warning, but keep isValid TRUE for submission
+                message = 'Invalid or unrecognized User ID.';
+                isValid = true; // IMPORTANT: Allows submission even if ref check fails
             }
         }
         
         // 2. Validation for Register Machine ID
-        else if (id === 'register-machine') {
-            const foundMachine = validMachines.find(m => m.id === trimmedValue);
+        else if (id === 'machineId') {
+            const foundMachine = validMachines.find(m => m.machineId === trimmedValue);
             
             if (!trimmedValue) {
                 // REQUIRED: Must set isValid = false
@@ -287,7 +297,7 @@ export const IncidentActions: React.FC<IncidentActionsProps> = ({ validUsers, va
             }
         }
 
-        else if (['register-summary', 'assign-id', 'close-id', 'report-id', 'pin'].includes(id)) { 
+        else if (['summary', 'id', 'processingStep', 'pin'].includes(id)) { 
             if (!trimmedValue) {
                 // REQUIRED: Must set isValid = false to block submission if empty
                 if (id === 'pin') {
